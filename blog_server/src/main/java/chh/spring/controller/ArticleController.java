@@ -106,6 +106,23 @@ public class ArticleController {
         return result;
     }
 
+    @GetMapping("/getArticleAndFirstPageCommentByArticleId")
+    public Result getArticleAndFirstPageCommentByArticleIdGet(@RequestParam Integer articleId,
+                                                              @RequestParam(defaultValue = "1") Long page,
+                                                              @RequestParam(defaultValue = "10") Long size) {
+        Result result = new Result();
+        try {
+            PageParams pageParams = new PageParams();
+            pageParams.setPage(page);
+            pageParams.setRows(size);
+            result = articleService.getArticleAndFirstPageCommentByArticleId(articleId, pageParams);
+        } catch (Exception e) {
+            result.setErrorMessage("查询文章失败！");
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     @PostMapping("/upload")
     public Result upload(MultipartFile  file){
         Result result = new Result();

@@ -65,12 +65,12 @@ const submitForm = async(formEl) => {
 <template>
 <div class="log">
   <el-row justify="center">
-    <el-col span="10">
+    <el-col :span="10">
       <h1 class="log-title">~欢迎登录博客~</h1>
     </el-col>
   </el-row>
   <el-row justify="center">
-    <el-col span="8">
+    <el-col :span="8">
       <el-form ref="ruleFormRef" :model="user" status-icon
         :rules="rules" label-width="120px" size="default">
         <el-form-item label="用户名：" prop="username">
@@ -86,7 +86,7 @@ const submitForm = async(formEl) => {
     </el-col>
   </el-row>
   <el-row justify="center">
-    <el-col span=“8”>
+    <el-col :span="8">
       <p style="margin: 80px; color:#2E2D3C">
         2022 @ Password By <a style="color: #0e90d2">CrazyStone</a></p>
     </el-col>

@@ -1,48 +1,100 @@
 package chh.spring.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import chh.spring.entity.Comment;
+import chh.spring.entity.vo.CommentVO;
 import chh.spring.mapper.CommentMapper;
-import chh.spring.service.ICommentService;
+import chh.spring.service.CommentService;
 import chh.spring.tools.PageParams;
 import chh.spring.tools.Result;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * <p>
- *  服务实现类
- * </p>
- *
- * @author baomidou
- * @since 2025-10-30
- */
+import java.util.Date;
+
 @Service
-public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements ICommentService {
+@Transactional // 支持事务
+public class CommentServiceImpl implements CommentService {
+
+    @Autowired
     private CommentMapper commentMapper;
 
-    public Comment insert(Comment comment){//返回添加后的评论，用于客户端展示
-        commentMapper.insert(comment);//添加数据后，comment对象会对应新增加的记录（具有了id等属性值）
-        return comment;
-    }
+    // 分页查询所有评论
+    @Override
+    public Result getCommentPage(PageParams pageParams) {
+        Result result = new Result();
+        // 构建查询条件：按评论时间降序
+        QueryWrapper<CommentVO> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("t_comment.created");
 
-    public CommentServiceImpl(CommentMapper commentMapper) {
-        this.commentMapper = commentMapper;
-    }
+        // 分页对象（页号、每页条数）
+        Page<CommentVO> page = new Page<>(pageParams.getPage(), pageParams.getRows());
+        IPage<CommentVO> commentPage = commentMapper.getCommentPage(page, wrapper);
 
-    public Result getAPageCommentByArticleId(Integer articleId, PageParams pageParams){
-        //查询条件构造器QueryWrapper
-        QueryWrapper wrapper=new QueryWrapper<>();//Java代码方式设置魏查询条件
-        wrapper.eq("article_id",articleId);//eq表示相等，字段名是表的字段名，不是实体类的属性名
-        wrapper.orderBy(true, false, "id");//排序，false表示降序
-        //创建分页对象（1表示第一页；2表示每页大小为2）
-        Page<Comment> page=new Page<>(pageParams.getPage(),pageParams.getRows());
-        Page<Comment> apage=commentMapper.selectPage(page,wrapper);//按条件进行分页查询
-        Result result=new Result();
-        result.getMap().put("comments",apage.getRecords());
+        // 封装结果（评论列表 + 分页信息）
+        pageParams.setTotal(commentPage.getTotal());
+        result.getMap().put("commentVOs", commentPage.getRecords());
+        result.getMap().put("pageParams", pageParams);
         return result;
     }
 
-}
+    // 根据文章ID查询评论
+    @Override
+    public Result getCommentByArticleId(Integer articleId, PageParams pageParams) {
+        Result result = new Result();
+        Page<CommentVO> page = new Page<>(pageParams.getPage(), pageParams.getRows());
+        IPage<CommentVO> commentPage = commentMapper.getCommentByArticleId(page, articleId);
 
+        pageParams.setTotal(commentPage.getTotal());
+        result.getMap().put("commentVOs", commentPage.getRecords());
+        result.getMap().put("pageParams", pageParams);
+        return result;
+    }
+
+    // 新增评论：补充ip、status字段
+    @Override
+    public void addComment(Comment comment) {
+        comment.setCreated(new Date());
+        comment.setIsDeleted(0);
+        comment.setStatus("approved"); // 默认状态（已审核）
+        
+        // 如果author为空，则设置默认值
+        if (comment.getAuthor() == null || comment.getAuthor().trim().isEmpty()) {
+            comment.setAuthor("匿名用户");
+        }
+        
+        commentMapper.insert(comment);
+    }
+
+    // 编辑评论：增加ip、status的修改
+    @Override
+    public void updateComment(Comment comment) {
+        Comment newComment = commentMapper.selectById(comment.getId());
+        if (newComment != null) {
+            newComment.setContent(comment.getContent());
+            newComment.setAuthor(comment.getAuthor());
+            newComment.setIp(comment.getIp()); // 新增
+            newComment.setStatus(comment.getStatus()); // 新增
+            commentMapper.updateById(newComment);
+        }
+    }
+
+    // 逻辑删除评论（修改is_deleted为1）
+    @Override
+    public void deleteComment(Integer id) {
+        Comment comment = commentMapper.selectById(id);
+        if (comment != null) {
+            comment.setIsDeleted(1);
+            commentMapper.updateById(comment);
+        }
+    }
+
+    // 根据ID查询单条评论
+    @Override
+    public Comment selectById(Integer id) {
+        return commentMapper.selectById(id);
+    }
+}

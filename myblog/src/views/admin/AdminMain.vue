@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from '@/stores/my'
 import { ElMessage } from 'element-plus'
 //引入菜单项使用的图标，使用下拉菜单
-import { View,DArrowRight} from '@element-plus/icons-vue'
+import { View,DArrowRight } from '@element-plus/icons-vue'
 
 // 创建一个响应式对象aside_state，它有两个属性。{}内为json格式
 const aside_state = reactive({collapse:false,width:"200px"})
@@ -33,6 +33,21 @@ function gotoArticleManage(){ //跳转至文章管理(文章列表)
   router.push({name:"manageArticle"})
 }
 provide("gotoArticleManage",gotoArticleManage)
+
+function gotoCommentManage(){ //跳转至评论管理
+  router.push({name:"commentManagement"})
+}
+provide("gotoCommentManage",gotoCommentManage)
+
+function publishComment() { // 跳转至发布/编辑评论
+  router.push({name: "publishComment"})
+}
+provide("publishComment", publishComment)
+
+function editComment() { // 跳转至编辑评论
+  router.push({name: "publishComment"})
+}
+provide("editComment", editComment)
 
 // 用户退出登录功能
 function logout() {

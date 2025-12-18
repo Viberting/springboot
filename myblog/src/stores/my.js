@@ -8,6 +8,7 @@ export const useStore = defineStore('my', () => {
   const page = reactive({
     "pageParams":null
   })
+  const commentId = ref(0) // 新增：评论ID（用于编辑回显）
 
   const home = reactive({
     "page":1
@@ -24,6 +25,6 @@ export const useStore = defineStore('my', () => {
     articleVOs: []
   })
 
-  return {articleId,page,home,searchState,user}
+  return {articleId,page,commentId,home,searchState,user}
 })
 

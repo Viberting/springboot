@@ -43,10 +43,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                 .antMatchers("/images/**","/article/articleSearch","/article/getIndexData1",
                             "/article/getAPageOfArticle","/article/getIndexData",
                             "/article/getArticleAndFirstPageCommentByArticleId",
-                            "/article/selectById","/comment/getAPageCommentByArticleId").permitAll()//任意访问
+                            "/article/selectById","/comment/getAPageCommentByArticleId",
+                            "/comment/insert").permitAll()//任意访问
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
                             "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
-                .antMatchers("/comment/insert").hasRole("common")//注册会员权限
                 .anyRequest().authenticated()
                 .and()
                 // 2、自定义用户登录控制

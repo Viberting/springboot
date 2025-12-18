@@ -2,6 +2,7 @@
 package chh.spring.service.impl;
 
 import chh.spring.entity.vo.ArticleVO;
+import chh.spring.entity.vo.CommentVO;
 import chh.spring.entity.Statistic;
 import chh.spring.mapper.ArticleMapper;
 import chh.spring.entity.Article;
@@ -108,9 +109,12 @@ public class ArticleServiceImpl implements ArticleService {
     public Result getArticleAndFirstPageCommentByArticleId(Integer articleId, PageParams pageParams){
         Result result = new Result();
         result.getMap().put("article",articleMapper.selectById(articleId));
-        result.getMap().put("comments"
-                ,commentMapper.getAPageCommentByArticleId(
-                        articleId, Math.toIntExact((pageParams.getPage() - 1) * pageParams.getRows()), Math.toIntExact(pageParams.getRows())));
+        
+        // 修复分页查询评论的调用方式
+        Page<CommentVO> page = new Page<>(pageParams.getPage(), pageParams.getRows());
+        IPage<CommentVO> commentPage = commentMapper.getCommentByArticleId(page, articleId);
+        result.getMap().put("comments", commentPage.getRecords());
+        
         //文章的点击次数+1
         Statistic statistic = statisticMapper.selectByArticleId(articleId);
         statistic.setHits(statistic.getHits()+1);

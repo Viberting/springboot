@@ -36,6 +36,17 @@ const router = createRouter({
           path:"manage_article",
           name:"manageArticle",
           component:()=>import("../views/admin/ManageArticle.vue")
+        },
+        // 添加评论管理路由
+        {
+          path:"comments",
+          name:"commentManagement",
+          component:()=>import("../views/admin/CommentManagement.vue")
+        },
+        {
+          path:"publish_comment",
+          name:"publishComment",
+          component:()=>import("../views/admin/PublishComment.vue")
         }
       ]
     },

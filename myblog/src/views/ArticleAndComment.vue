@@ -24,7 +24,8 @@ function submit(){
       "articleId":route.params.articleId,
       "content":commentContent.value
     },
-    timeout: 3000000
+    timeout: 3000000,
+    withCredentials: true
   }).then((response) => {
     if(response.data.success){
       articleAndComment.comments.unshift(response.data.map.comment);
@@ -51,7 +52,8 @@ axios({
   url: '/api/article/getArticleAndFirstPageCommentByArticleId?articleId='
         +route.params.articleId, //使用查询字符串传递参数
   data: pageParams,//传递一个对象，服务端使用@RequestBody接收
-  timeout: 3000000
+  timeout: 3000000,
+  withCredentials: true
 }).then((response) => {
   if(response.data.success){
     if(response.data.map.article!=null){
@@ -80,7 +82,8 @@ const load = () => {
     url: '/api/comment/getAPageCommentByArticleId?articleId='
           +route.params.articleId, //使用查询字符串传递参数
     data: pageParams,//传递一个对象，服务端使用@RequestBody接收
-    timeout: 3000000
+    timeout: 3000000,
+    withCredentials: true
   }).then((response) => {
     if(response.data.success){
       let comments = response.data.map.comments
