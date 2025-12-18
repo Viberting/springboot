@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chh.spring.mapper.ArticleMapper">
+<!--  说明：1、xml中可以写多个增删改查语句，每一个语句对应mapper中的一个方法，可以带参数，可以设定返回值类型
+           2、对同一个sql语句，可在xml中写sql语句，也可以如之前用注解方式写sql语句，它们都能实现相同的功能
+           3、尽可能使用注解方式，但复杂动态sql语句使用xml更加方便-->
+
+    <!--  id的值对应mapper中的一个方法getAPage    分页查询语句，可以带参数，如#{offset}  -->
+    <select id="getAPage" resultType="chh.spring.entity.Article">
+        SELECT * FROM t_article ORDER BY id DESC LIMIT #{offset},#{size}
+    </select>
+
+</mapper>
