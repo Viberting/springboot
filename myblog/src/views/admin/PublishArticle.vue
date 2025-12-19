@@ -47,7 +47,7 @@ const image_upload_handler = (blobInfo, progress) => new Promise((resolve, rejec
   xhr.send(formData);
 });
 
-const apiKey = ref('bdddx89zynvfw2qmzfk2mhycdiss6ujej1hkf49al3p0omcc')
+const apiKey = ref('bkybykccm7np91con9v5ozoo3wtv4b90l6ei9a1kje6fm5cw')
 const init = reactive({
   language: "zh_CN", //语言类型
   placeholder: "在这里输入文字",

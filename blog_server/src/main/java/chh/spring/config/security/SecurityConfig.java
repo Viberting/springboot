@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -36,17 +35,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
     private MyAuthenticationFailureHandler myAuthenticationFailureHandler;
     @Autowired
     private ObjectMapper objectMapper;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 // 1、自定义用户访问控制
+                // ========== 核心修改：添加 /user/register 到匿名访问列表 ==========
                 .antMatchers("/images/**","/article/articleSearch","/article/getIndexData1",
-                            "/article/getAPageOfArticle","/article/getIndexData",
-                            "/article/getArticleAndFirstPageCommentByArticleId",
-                            "/article/selectById","/comment/getAPageCommentByArticleId",
-                            "/comment/insert").permitAll()//任意访问
+                        "/article/getAPageOfArticle","/article/getIndexData",
+                        "/article/getArticleAndFirstPageCommentByArticleId",
+                        "/article/selectById","/comment/getAPageCommentByArticleId",
+                        "/comment/insert", "/user/register")// 新增：注册接口匿名访问
+                .permitAll()//任意访问（无需登录）
+                // ========== 原有管理员权限接口不变 ==========
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
-                            "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
+                        "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
                 .anyRequest().authenticated()
                 .and()
                 // 2、自定义用户登录控制
@@ -64,7 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                         request.getSession().removeAttribute("user");
                         response.setContentType("application/json;charset=UTF-8");
                         response.getWriter().write(objectMapper.writeValueAsString(
-                                                    new Result(true,"登出成功")));
+                                new Result(true,"登出成功")));
                     }
                 })
                 .permitAll()
@@ -72,10 +75,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
         //防止错误：Refused to display in a frame because it set 'X-Frame-Options' to 'DENY'
         http.headers().frameOptions().disable();
     }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(myUserDetailsService).passwordEncoder(passwordEncoder());
     }
+
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();//密码加密策略

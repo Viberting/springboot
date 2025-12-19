@@ -17,6 +17,10 @@ import java.util.List;
  */
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
+    // 1. 校验用户名是否已存在（注册时用）
+    @Select("SELECT COUNT(*) FROM t_user WHERE username = #{username}")
+    Integer checkUsernameUnique(String username);
+
     @Select("select * from t_user where username = #{username}")
     public User findByName(String username);
     //根据用户名查询未被禁用的用户信息

@@ -1,6 +1,7 @@
 package chh.spring.service;
 
 import chh.spring.entity.User;
+import chh.spring.tools.Result;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +12,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author baomidou
  * @since 2025-10-30
  */
-public interface IUserService extends IService<User> {
+public interface UserService extends IService<User> {
 
+    // 新增：用户注册
+    Result register(User user);
 }

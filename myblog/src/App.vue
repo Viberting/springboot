@@ -16,6 +16,11 @@ const toAdminMain = () => {
 //provid可以将父组件的数据和函数传到孙子组件
 //第二个参数为提供的函数名称，第一个为自定义的别名（在后代组件中使用）
 
+// 新增：跳转到注册页
+const toRegister = () => {
+  router.push({ name: 'register' })
+}
+
 function toArticle(){
   router.push({ name: 'articleAndComment', params: { articleId: 13 } })//设置跳转参数
 }
@@ -30,6 +35,7 @@ provide("toAdminMain", toAdminMain);
 provide("toArticle", toArticle);
 provide("toLogin", toLogin);
 provide("toHome", toHome);
+provide("toRegister", toRegister)
 
 </script>
 

@@ -14,51 +14,56 @@ const router = createRouter({
       component: () => import("../views/common/Login.vue"),
     },
     {
+      path: "/register",
+      name: "register",
+      component: () => import("../views/common/Register.vue"),
+    },
+    {
       path: "/admin_Main",
       name: "adminMain",
       component: () => import("../views/admin/AdminMain.vue"),
-      children:[//子路由：表示publish_article,edit_article等将会在AdminMain.vue内的<RouterView />的位置显示
+      children: [//子路由：表示publish_article,edit_article等将会在AdminMain.vue内的<RouterView />的位置显示
         {
           //当 /admin_Main/publish_article匹配成功
           //publish_article将杯渲染到 admin_Main的<router-view>内部
-          path:"publish_article",
-          name:"publishArticle",
-          component:()=>import("../views/admin/PublishArticle.vue")
+          path: "publish_article",
+          name: "publishArticle",
+          component: () => import("../views/admin/PublishArticle.vue")
         },
         {
           //当 /admin_Main/edit_article匹配成功
           //edit_article将杯渲染到admin_Main的<router-view>内部
-          path:"edit_article",
-          name:"editArticle",
-          component:()=>import("../views/admin/EditArticle.vue")
+          path: "edit_article",
+          name: "editArticle",
+          component: () => import("../views/admin/EditArticle.vue")
         },
         {
-          path:"manage_article",
-          name:"manageArticle",
-          component:()=>import("../views/admin/ManageArticle.vue")
+          path: "manage_article",
+          name: "manageArticle",
+          component: () => import("../views/admin/ManageArticle.vue")
         },
         // 添加评论管理路由
         {
-          path:"comments",
-          name:"commentManagement",
-          component:()=>import("../views/admin/CommentManagement.vue")
+          path: "comments",
+          name: "commentManagement",
+          component: () => import("../views/admin/CommentManagement.vue")
         },
         {
-          path:"publish_comment",
-          name:"publishComment",
-          component:()=>import("../views/admin/PublishComment.vue")
+          path: "publish_comment",
+          name: "publishComment",
+          component: () => import("../views/admin/PublishComment.vue")
         }
       ]
     },
     {
       path: '/article_comment/:articleId',//:articleId表示动态路由参数
       name: 'articleAndComment',
-      component:()=>import('../views/ArticleAndComment.vue')
+      component: () => import('../views/ArticleAndComment.vue')
     },
     {
       path: '/search',
       name: 'search',
-      component:()=>import('../views/Search.vue')
+      component: () => import('../views/Search.vue')
     }
   ]
 });
