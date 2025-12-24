@@ -25,4 +25,5 @@ public class Article {
     private String tags;    //文章标签
     private Boolean allowComment;   //是否允许评论,默认为true
     private String thumbnail;   //文章缩略图
+    private Integer authorId;   //文章作者ID
 }

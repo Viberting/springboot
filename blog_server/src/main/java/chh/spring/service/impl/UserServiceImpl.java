@@ -2,6 +2,7 @@ package chh.spring.service.impl;
 
 import chh.spring.entity.User;
 import chh.spring.entity.UserAuthority;
+import chh.spring.entity.dto.UserProfileDTO;
 import chh.spring.mapper.UserMapper;
 import chh.spring.mapper.UserAuthorityMapper;
 import chh.spring.service.UserService;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+
+import javax.annotation.Resource;
 
 /**
  * <p>
@@ -76,5 +79,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         result.setSuccess(true);
         result.setMsg("注册成功！请登录");
         return result;
+    }
+
+    /**
+     * 更新用户个人资料
+     * @param userId 用户ID
+     * @param profileDTO 个人资料数据
+     */
+    @Override
+    public void updateUserProfile(Integer userId, UserProfileDTO profileDTO) {
+        User user = getById(userId);
+        if (user != null) {
+            // 更新基本信息
+            user.setUsername(profileDTO.getUsername());
+            user.setEmail(profileDTO.getEmail());
+            
+            // 如果提供了新密码，则更新密码
+            if (profileDTO.getPassword() != null && !profileDTO.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(profileDTO.getPassword()));
+            }
+            
+            // 更新个人中心信息
+            user.setAvatar(profileDTO.getAvatar());
+            user.setIntro(profileDTO.getIntro());
+            user.setGithubUrl(profileDTO.getGithubUrl());
+            user.setBgImage(profileDTO.getBgImage());
+            user.setGender(profileDTO.getGender());
+            user.setBirthday(profileDTO.getBirthday());
+            
+            // 保存更新
+            updateById(user);
+        }
     }
 }

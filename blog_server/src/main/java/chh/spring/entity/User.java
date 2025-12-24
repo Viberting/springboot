@@ -35,4 +35,17 @@ public class User implements Serializable {
     private LocalDate created;
 
     private Boolean valid;
+    
+    // 新增的个人中心字段
+    private String avatar;
+    
+    private String intro;
+    
+    private String githubUrl;
+    
+    private String bgImage;
+    
+    private Integer gender;
+    
+    private LocalDate birthday;
 }

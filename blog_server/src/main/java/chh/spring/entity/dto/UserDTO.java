@@ -4,6 +4,7 @@ import chh.spring.entity.User;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -13,6 +14,15 @@ public class UserDTO {
     private String username;
     private String email;
     private Boolean valid;
+    
+    // 新增的个人中心字段
+    private String avatar;
+    private String intro;
+    private String githubUrl;
+    private String bgImage;
+    private Integer gender;
+    private LocalDate birthday;
+    
     List<String> authorities;//权限
     //将DTO对象转为实体类对象
     public static void dtoToEntity(UserDTO dto, User entity) {

@@ -49,7 +49,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                 .permitAll()//任意访问（无需登录）
                 // ========== 原有管理员权限接口不变 ==========
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
-                        "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
+                            "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
+                .antMatchers("/user/profile").hasAnyRole("USER", "admin") // 用户个人中心权限
+
                 .anyRequest().authenticated()
                 .and()
                 // 2、自定义用户登录控制
