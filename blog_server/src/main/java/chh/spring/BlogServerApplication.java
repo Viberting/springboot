@@ -12,4 +12,4 @@ public class BlogServerApplication {
         SpringApplication.run(BlogServerApplication.class, args);
     }
 
-}
+}add
