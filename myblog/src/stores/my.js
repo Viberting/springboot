@@ -18,6 +18,10 @@ export const useStore = defineStore('my', () => {
     "user": null
   })
 
+  // 新增：用户管理相关状态（编辑用户ID、权限选择）
+  const editUserId = ref(0); // 待编辑的用户ID
+  const selectedAuthorityIds = ref([]); // 选中的权限ID列表
+
   // 全局保存搜索页面的查询条件、分页参数以及查询结果
   const searchState = reactive({
     articleCondition: { title: '', startDate: '', endDate: '' },
@@ -25,6 +29,6 @@ export const useStore = defineStore('my', () => {
     articleVOs: []
   })
 
-  return {articleId,page,commentId,home,searchState,user}
+  return {articleId,page,commentId,home,searchState,user,editUserId, selectedAuthorityIds}
 })
 

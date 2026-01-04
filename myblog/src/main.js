@@ -42,9 +42,34 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 import axios from 'axios'
 //vue-axios是将axios集成到Vue.js的小包装器，可以像插件一样进行安装
 import VueAxios from 'vue-axios'
+
+// 添加响应拦截器来处理认证失败的情况
+axios.interceptors.response.use(
+  response => {
+    // 检查响应是否是HTML内容（可能是重定向到登录页）
+    const contentType = response.headers['content-type'];
+    if (contentType && contentType.includes('text/html')) {
+      // 如果是HTML内容，可能是被重定向到登录页
+      console.warn('Received HTML response instead of JSON. Possible redirect to login page.');
+      // 可以在这里添加全局提醒或者重定向到登录页
+      // 例如：window.location.href = '/login';
+    }
+    return response;
+  },
+  error => {
+    // 处理401 Unauthorized错误
+    if (error.response && error.response.status === 401) {
+      console.warn('Unauthorized access - redirecting to login');
+      // 可以在这里添加全局提醒或者重定向到登录页
+      // 例如：window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 app.use(VueAxios, axios)
 //provide 'axios'，其它地方可以注入，从而可以使用axios
-app.provide('axios', app.config.globalProperties.axios)
+app.provide('axios', axios)
 
 // 引入并注册图片裁剪插件vue-cropper
 import VueCropper from 'vue-cropper';

@@ -47,6 +47,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                         "/article/selectById","/comment/getAPageCommentByArticleId",
                         "/comment/insert", "/user/register")// 新增：注册接口匿名访问
                 .permitAll()//任意访问（无需登录）
+                // ========== 添加用户管理接口的管理员权限控制 ==========
+                .antMatchers("/user/**").hasRole("admin")//用户管理接口需要管理员权限
                 // ========== 原有管理员权限接口不变 ==========
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
                         "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限

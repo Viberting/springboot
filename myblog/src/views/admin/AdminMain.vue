@@ -49,6 +49,11 @@ function editComment() { // 跳转至编辑评论
 }
 provide("editComment", editComment)
 
+function gotoUserManage() { // 跳转至用户管理
+  router.push({name: "manageUser"})
+}
+provide("gotoUserManage", gotoUserManage)
+
 // 用户退出登录功能
 function logout() {
   axios({
@@ -112,6 +117,12 @@ function logout() {
                     <Comment />
                   </el-icon>
                   <span>评论管理</span>
+                </el-menu-item>
+                <el-menu-item index="/admin_Main/manage_user" @click="gotoUserManage">
+                  <el-icon>
+                    <User />
+                  </el-icon>
+                  <span>用户管理</span>
                 </el-menu-item>
                 <el-menu-item>
                   <el-icon>

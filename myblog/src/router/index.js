@@ -52,6 +52,12 @@ const router = createRouter({
           path: "publish_comment",
           name: "publishComment",
           component: () => import("../views/admin/PublishComment.vue")
+        },
+        // 新增：用户管理路由
+        {
+          path: "manage_user",
+          name: "manageUser",
+          component: () => import("../views/admin/ManageUser.vue")
         }
       ]
     },
