@@ -25,14 +25,14 @@ const router = createRouter({
       children: [//子路由：表示publish_article,edit_article等将会在AdminMain.vue内的<RouterView />的位置显示
         {
           //当 /admin_Main/publish_article匹配成功
-          //publish_article将杯渲染到 admin_Main的<router-view>内部
+          //publish_article将杯渲染到 AdminMain.vue内的<router-view>内部
           path: "publish_article",
           name: "publishArticle",
           component: () => import("../views/admin/PublishArticle.vue")
         },
         {
           //当 /admin_Main/edit_article匹配成功
-          //edit_article将杯渲染到admin_Main的<router-view>内部
+          //edit_article将杯渲染到adminMain.vue内的<router-view>内部
           path: "edit_article",
           name: "editArticle",
           component: () => import("../views/admin/EditArticle.vue")
@@ -70,6 +70,17 @@ const router = createRouter({
       path: '/search',
       name: 'search',
       component: () => import('../views/Search.vue')
+    },
+    {
+      path: '/user_profile',
+      name: 'userProfile',
+      component:()=>import('../views/UserProfile.vue')
+    },
+    {
+      path: '/user_profile/:userId',
+      name: 'otherUserProfile',
+      component:()=>import('../views/UserProfile.vue'),
+      props: true
     }
   ]
 });

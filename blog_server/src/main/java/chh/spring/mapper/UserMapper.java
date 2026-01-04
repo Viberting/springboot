@@ -2,6 +2,7 @@ package chh.spring.mapper;
 
 import chh.spring.entity.User;
 import chh.spring.entity.vo.UserVO;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.apache.ibatis.annotations.Mapper;
@@ -36,14 +37,15 @@ public interface UserMapper extends BaseMapper<User> {
 
     // 1. 分页查询用户列表（关联权限表，获取用户拥有的权限）
     @Select("SELECT u.id, u.username, u.email, u.created, " +
-            "GROUP_CONCAT(a.authority) AS authorityNames " +
+            "COALESCE(GROUP_CONCAT(a.authority SEPARATOR ','), '') AS authorityNames " +
             "FROM t_user u " +
             "LEFT JOIN t_user_authority ua ON u.id = ua.user_id " +
             "LEFT JOIN t_authority a ON ua.authority_id = a.id " +
             "WHERE u.valid = #{valid} " +
-            "GROUP BY u.id " +
-            "ORDER BY u.created DESC")
-    IPage<UserVO> getUserPage(IPage<UserVO> page, @Param("valid") Integer valid);
+            "GROUP BY u.id, u.username, u.email, u.created " +
+            "ORDER BY u.created DESC " +
+            "${ew.customSqlSegment}")
+    IPage<UserVO> getUserPage(IPage<UserVO> page, @Param("valid") Object valid, @Param("ew") Wrapper<UserVO> wrapper);
 
     // 2. 校验用户名唯一性（新增/编辑用户时用）
     @Select("SELECT COUNT(*) FROM t_user WHERE username = #{username} AND id != #{id}")

@@ -341,16 +341,70 @@ const getUserPage = async () => {
     }
     
     if (response.data.success) {
-      myData.userVOs = response.data.map.users || []
-      myData.pageParams = response.data.map.pageParams
-      console.log('获取到的用户数据:', myData.userVOs);
-      console.log('分页参数:', myData.pageParams);
-      if (myData.userVOs.length === 0) {
-        ElMessage.info("暂无用户数据")
+      // 尝试多种可能的数据结构
+      console.log('完整响应数据:', response.data);
+      
+      // 检查不同可能的数据结构
+      if (response.data.map && response.data.map.users) {
+        // 标准结构
+        myData.userVOs = response.data.map.users || []
+        myData.pageParams = response.data.map.pageParams
+      } else if (response.data.map && response.data.map.userVOs) {
+        // 备用结构 - 可能是userVOs而不是users
+        myData.userVOs = response.data.map.userVOs || []
+        myData.pageParams = response.data.map.pageParams
+      } else if (response.data.map && Array.isArray(Object.values(response.data.map)[0])) {
+        // 如果map的第一个值是数组，尝试找到用户数组
+        const mapKeys = Object.keys(response.data.map);
+        for (const key of mapKeys) {
+          if (Array.isArray(response.data.map[key]) && response.data.map[key].length > 0 && response.data.map[key][0].hasOwnProperty('username')) {
+            // 假设包含username属性的是用户数组
+            myData.userVOs = response.data.map[key];
+            break;
+          }
+        }
+        // 如果没找到用户数组但数组为空，也尝试
+        if (myData.userVOs.length === 0) {
+          for (const key of mapKeys) {
+            if (Array.isArray(response.data.map[key])) {
+              myData.userVOs = response.data.map[key];
+              break;
+            }
+          }
+        }
+        // 分页参数处理
+        if (response.data.map.pageParams) {
+          myData.pageParams = response.data.map.pageParams;
+        } else {
+          // 尝试找到包含page, rows, total的属性
+          for (const key of mapKeys) {
+            const obj = response.data.map[key];
+            if (obj && typeof obj === 'object' && obj.page !== undefined && obj.rows !== undefined && obj.total !== undefined) {
+              myData.pageParams = obj;
+              break;
+            }
+          }
+        }
+      } else {
+        // 如果没有map结构，直接检查data
+        console.warn('响应数据结构与预期不同:', response.data);
+        ElMessageBox.alert('响应数据结构异常，请检查后端接口', '警告');
+        myData.userVOs = [];
+        myData.pageParams = { page: 1, rows: 10, total: 0 };
+      }
+      
+      console.log('最终获取到的用户数据:', myData.userVOs);
+      console.log('最终分页参数:', myData.pageParams);
+      
+      if (myData.userVOs.length === 0 && myData.pageParams.total > 0) {
+        console.warn('警告：总数不为0但用户数组为空，可能的数据结构问题');
+        ElMessage.warning('数据总数不匹配，请联系管理员检查数据结构');
+      } else if (myData.userVOs.length === 0) {
+        ElMessage.info("暂无用户数据");
       }
     } else {
       console.log('后端返回错误:', response.data.msg);
-      ElMessageBox.alert(response.data.msg, "查询用户失败")
+      ElMessageBox.alert(response.data.msg, "查询用户失败");
     }
   } catch (error) {
     console.error('查询用户失败:', error);

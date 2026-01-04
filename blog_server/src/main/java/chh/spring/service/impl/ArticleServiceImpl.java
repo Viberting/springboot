@@ -143,7 +143,13 @@ public class ArticleServiceImpl implements ArticleService {
     @Transactional  //表示publish方法会被作为一个事务处理，确保文章和统计记录同时添加或均不添加
     public void publish(Article article){
         article.setCreated(new Date());
-        // articleMapper使用从父类BaseMapper继承过来的insert方法，将文章添加到表t_articl
+        // 设置作者ID（如果存在）
+        if (article.getAuthorId() == null) {
+            // 这里应该从当前登录用户获取，但目前暂时设为默认值
+            // 在实际应用中，需要从安全上下文获取当前用户ID
+            article.setAuthorId(1); // 临时设置，实际应用中需要从安全上下文获取
+        }
+        // articleMapper使用从父类BaseMapper继承过来的insert方法，将文章添加到表t_article
         articleMapper.insert(article);
         //添加统计记录
         Statistic statistic = new Statistic();
@@ -160,6 +166,8 @@ public class ArticleServiceImpl implements ArticleService {
         newArticle.setContent(article.getContent());
         newArticle.setTags(article.getTags());
         newArticle.setThumbnail(article.getThumbnail());
+        // 保留作者信息
+        newArticle.setAuthorId(article.getAuthorId());
         //articleMapper使用从父类BaseMapper继承过来的insert方法，将文章添加到表t_article
         articleMapper.updateById(newArticle);
     }
@@ -193,6 +201,22 @@ public class ArticleServiceImpl implements ArticleService {
         articleSearch.getPageParams().setTotal(aPage.getTotal());
         result.getMap().put("articleVOs",aPage.getRecords());
         result.getMap().put("pageParams",articleSearch.getPageParams());
+        return result;
+    }
+
+    // 根据作者ID获取文章列表
+    @Override
+    public Result getArticlesByAuthorId(Integer authorId, PageParams pageParams) {
+        QueryWrapper<Article> wrapper = new QueryWrapper<>();
+        wrapper.eq("author_id", authorId);
+        wrapper.orderByDesc("created");
+
+        Page<Article> page = new Page<>(pageParams.getPage(), pageParams.getRows());
+        IPage<Article> aPage = articleMapper.selectPage(page, wrapper);
+        Result result = new Result();
+        pageParams.setTotal(aPage.getTotal());
+        result.getMap().put("articles", aPage.getRecords());
+        result.getMap().put("pageParams", pageParams);
         return result;
     }
 }

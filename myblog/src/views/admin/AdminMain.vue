@@ -118,7 +118,7 @@ function logout() {
                   </el-icon>
                   <span>评论管理</span>
                 </el-menu-item>
-                <el-menu-item index="/admin_Main/manage_user" @click="gotoUserManage">
+                <el-menu-item index="/admin_Main/manage_user">
                   <el-icon>
                     <User />
                   </el-icon>

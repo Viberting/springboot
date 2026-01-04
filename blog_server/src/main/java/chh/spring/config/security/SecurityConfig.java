@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
@@ -45,13 +46,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                         "/article/getAPageOfArticle","/article/getIndexData",
                         "/article/getArticleAndFirstPageCommentByArticleId",
                         "/article/selectById","/comment/getAPageCommentByArticleId",
-                        "/comment/insert", "/user/register")// 新增：注册接口匿名访问
+                        "/comment/insert", "/user/register", "/user/login")// 新增：注册和登录接口匿名访问
                 .permitAll()//任意访问（无需登录）
                 // ========== 添加用户管理接口的管理员权限控制 ==========
-                .antMatchers("/user/**").hasRole("admin")//用户管理接口需要管理员权限
+                .antMatchers("/user/getUserPage", "/user/selectById", "/user/getAllAuthorities", "/user/updateProfile").hasRole("admin")//用户管理接口需要管理员权限
                 // ========== 原有管理员权限接口不变 ==========
+                .antMatchers("/user/**").hasRole("admin")//其他用户管理接口需要管理员权限
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
-                        "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
+                            "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
+                .antMatchers("/user/profile").hasAnyRole("USER", "admin") // 用户个人中心权限
+
                 .anyRequest().authenticated()
                 .and()
                 // 2、自定义用户登录控制
@@ -86,5 +90,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();//密码加密策略
+    }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
     }
 }

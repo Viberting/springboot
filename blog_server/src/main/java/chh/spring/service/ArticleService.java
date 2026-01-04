@@ -32,4 +32,7 @@ public interface ArticleService {
 
     public Result articleSearch(ArticleSearch articleSearch);
 
-    }
+    // 根据作者ID获取文章列表
+    public Result getArticlesByAuthorId(Integer authorId, PageParams pageParams);
+
+}

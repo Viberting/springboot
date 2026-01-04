@@ -4,6 +4,7 @@ package chh.spring.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,6 @@ public class Article {
     private String tags;    //文章标签
     private Boolean allowComment;   //是否允许评论,默认为true
     private String thumbnail;   //文章缩略图
+    @TableField(exist = false)   // 暂时标记为不存在，避免查询时出错
+    private Integer authorId;   //文章作者ID
 }
