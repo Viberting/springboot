@@ -5,6 +5,7 @@ import chh.spring.entity.UserAuthority;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -17,4 +18,8 @@ public interface UserAuthorityMapper extends BaseMapper<UserAuthority> {
 
     // 批量插入用户-权限关联（编辑用户权限时用）
     void batchInsert(@Param("list") List<UserAuthority> userAuthorityList);
+    
+    // 根据用户ID查询权限ID列表
+    @Select("SELECT authority_id FROM t_user_authority WHERE user_id = #{userId}")
+    List<Integer> selectAuthorityIdsByUserId(@Param("userId") Integer userId);
 }

@@ -1,18 +1,20 @@
 package chh.spring.service.impl;
 
-import chh.spring.entity.Authority;
 import chh.spring.entity.User;
 import chh.spring.entity.UserAuthority;
+import chh.spring.entity.Authority;
 import chh.spring.entity.vo.UserVO;
-import chh.spring.mapper.AuthorityMapper;
 import chh.spring.mapper.UserMapper;
 import chh.spring.mapper.UserAuthorityMapper;
+import chh.spring.mapper.AuthorityMapper;
 import chh.spring.service.UserService;
 import chh.spring.tools.Result;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,14 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * <p>
- *  服务实现类
- * </p>
- *
- * @author baomidou
- * @since 2025-10-30
- */
 @Service
 @Transactional // 事务管理：确保用户和权限关联同时创建
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -73,7 +67,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 4. 设置用户默认信息
         user.setCreated(LocalDate.now()); // 注册时间
-        user.setValid(true); // 默认账号有效
+        user.setValid(1); // 默认账号有效
         user.setEmail(user.getEmail() == null ? "" : user.getEmail()); // 邮箱可选，为空时设空字符串
 
         // 5. 新增用户到t_user表
@@ -111,5 +105,111 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User getUserById(Integer id) {
         return userMapper.selectById(id);
+    }
+    
+    @Override
+    public Result adminAddUser(User user) {
+        Result result = new Result();
+
+        // 1. 校验用户名：非空 + 唯一性
+        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            result.setErrorMessage("用户名不能为空！");
+            return result;
+        }
+        Integer count = this.baseMapper.checkUsernameUnique(user.getUsername(), null);
+        if (count != null && count > 0) {
+            result.setErrorMessage("用户名已存在，请更换！");
+            return result;
+        }
+
+        // 2. 校验密码：非空
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            result.setErrorMessage("密码不能为空！");
+            return result;
+        }
+
+        // 3. 密码加密
+        String encryptedPwd = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encryptedPwd);
+
+        // 4. 设置用户默认信息
+        user.setCreated(LocalDate.now());
+        user.setValid(1); // 默认账号有效
+        user.setEmail(user.getEmail() == null ? "" : user.getEmail());
+
+        // 5. 新增用户到t_user表
+        this.save(user);
+
+        // 6. 默认分配普通用户权限（ID=2）
+        UserAuthority userAuthority = new UserAuthority();
+        userAuthority.setUserId(user.getId());
+        userAuthority.setAuthorityId(2); // 普通用户权限
+        userAuthorityMapper.insert(userAuthority);
+
+        result.setSuccess(true);
+        result.setMsg("用户创建成功！");
+        return result;
+    }
+    
+    @Override
+    public Result adminUpdateUser(User user) {
+        Result result = new Result();
+
+        // 1. 获取原始用户信息
+        User existingUser = userMapper.selectById(user.getId());
+        if (existingUser == null) {
+            result.setErrorMessage("用户不存在！");
+            return result;
+        }
+
+        // 2. 如果用户名有变化，需要校验新用户名的唯一性
+        if (user.getUsername() != null && !user.getUsername().trim().isEmpty()) {
+            // 用户名有变化时，校验新用户名的唯一性（排除当前用户）
+            if (!existingUser.getUsername().equals(user.getUsername())) {
+                Integer count = this.baseMapper.checkUsernameUnique(user.getUsername(), user.getId());
+                if (count != null && count > 0) {
+                    result.setErrorMessage("用户名已存在，请更换！");
+                    return result;
+                }
+                // 设置新的用户名
+                existingUser.setUsername(user.getUsername());
+            }
+        }
+        
+        // 3. 如果提供了新密码，则加密更新
+        if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+            String encryptedPwd = passwordEncoder.encode(user.getPassword());
+            existingUser.setPassword(encryptedPwd);
+        }
+        
+        // 4. 更新其他可修改的字段
+        if (user.getEmail() != null) {
+            existingUser.setEmail(user.getEmail());
+        }
+        if (user.getValid() != null) {
+            existingUser.setValid(user.getValid());
+        }
+
+        // 5. 更新用户信息
+        boolean userUpdated = this.updateById(existingUser);
+        if (!userUpdated) {
+            result.setErrorMessage("更新用户信息失败！");
+            return result;
+        }
+
+        // 6. 删除原有权限关联
+        LambdaQueryWrapper<UserAuthority> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserAuthority::getUserId, existingUser.getId());
+        userAuthorityMapper.delete(queryWrapper);
+
+        // 7. 重新分配权限 - 默认分配普通用户权限（ID=2）
+        UserAuthority userAuthority = new UserAuthority();
+        userAuthority.setUserId(existingUser.getId());
+        userAuthority.setAuthorityId(2); // 普通用户权限
+        userAuthorityMapper.insert(userAuthority);
+
+        result.setSuccess(true);
+        result.setMsg("用户更新成功！");
+        return result;
     }
 }

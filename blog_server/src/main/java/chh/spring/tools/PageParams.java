@@ -14,4 +14,6 @@ public class PageParams {
     private Long rows = 2L;
     //总记录数
     private Long total;
+    //有效性过滤
+    private Integer valid;
 }

@@ -27,7 +27,7 @@ public class MyUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException(username);
             
         // 检查用户是否有效，无效用户不能登录
-        if (!user.getValid()) {
+        if (user.getValid() != null && user.getValid().equals(0)) {
             throw new DisabledException("用户已被禁用，无法登录");
         }
 

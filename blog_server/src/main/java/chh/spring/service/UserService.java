@@ -34,4 +34,10 @@ public interface UserService extends IService<User> {
     
     // 根据ID查询用户详情
     User getUserById(Integer id);
+    
+    // 管理员新增用户（权限默认为普通用户）
+    Result adminAddUser(User user);
+    
+    // 管理员更新用户（权限默认为普通用户）
+    Result adminUpdateUser(User user);
 }
