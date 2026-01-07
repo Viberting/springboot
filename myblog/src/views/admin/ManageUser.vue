@@ -27,8 +27,7 @@
           <!-- ✅ 修复核心：账号状态列 匹配数据库1/0 正常显示 -->
           <el-table-column label="账号状态" width="100" align="center">
             <template #default="scope">
-              <span style="color: green; font-weight: 500;" v-if="scope.row.valid === 1">有效</span>
-              <span style="color: red; font-weight: 500;" v-else>禁用</span>
+              <span style="color: black;">有效</span>
             </template>
           </el-table-column>
                   <el-table-column label="拥有权限" width="200">

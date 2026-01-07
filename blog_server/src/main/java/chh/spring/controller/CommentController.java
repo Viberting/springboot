@@ -2,6 +2,7 @@ package chh.spring.controller;
 
 import chh.spring.entity.Comment;
 import chh.spring.service.CommentService;
+import chh.spring.tools.CommentSearch;
 import chh.spring.tools.PageParams;
 import chh.spring.tools.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +108,25 @@ public class CommentController {
             result.setMsg("添加成功"); // 添加成功提示信息
         } catch (Exception e) {
             result.setErrorMessage("添加评论失败！");
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // 按条件搜索评论（管理员功能）
+    @PostMapping("/searchComments")
+    public Result searchComments(@RequestBody CommentSearch commentSearch) {
+        Result result = new Result();
+        try {
+            result = commentService.searchComments(
+                    commentSearch.getContent(),
+                    commentSearch.getArticleId(),
+                    commentSearch.getAuthor(),
+                    String.valueOf(commentSearch.getStatus()),  // 转换为String类型
+                    commentSearch.getPageParams()
+            );
+        } catch (Exception e) {
+            result.setErrorMessage("搜索评论失败：" + e.getMessage());
             e.printStackTrace();
         }
         return result;

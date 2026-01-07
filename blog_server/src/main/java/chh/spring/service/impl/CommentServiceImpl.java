@@ -97,4 +97,48 @@ public class CommentServiceImpl implements CommentService {
     public Comment selectById(Integer id) {
         return commentMapper.selectById(id);
     }
+
+    // 按条件搜索评论
+    @Override
+    public Result searchComments(String content, Integer articleId, String author, String status, PageParams pageParams) {
+        Result result = new Result();
+        try {
+            // 检查pageParams是否为null
+            if (pageParams == null) {
+                pageParams = new PageParams();
+                pageParams.setPage(1L);
+                pageParams.setRows(10L);
+            }
+
+            // 使用MyBatis-Plus分页插件
+            Page<CommentVO> page = new Page<>(
+                    pageParams.getPage() != null ? pageParams.getPage() : 1L,
+                    pageParams.getRows() != null ? pageParams.getRows() : 10L
+            );
+
+            // 对参数进行null检查
+            String safeContent = (content != null && content.trim().isEmpty()) ? null : content;
+            String safeAuthor = (author != null && author.trim().isEmpty()) ? null : author;
+            String safeStatus = status;  // 保持String类型
+            Integer safeArticleId = articleId;
+
+            // 执行搜索查询（使用分页插件）
+            IPage<CommentVO> commentPage = commentMapper.searchComments(
+                    page, safeContent, safeArticleId, safeAuthor, safeStatus != null && !"null".equals(safeStatus) ? Integer.valueOf(safeStatus) : null
+            );
+
+            // 设置总数
+            pageParams.setTotal(commentPage.getTotal());
+
+            // 封装结果
+            result.getMap().put("commentVOs", commentPage.getRecords());
+            result.getMap().put("pageParams", pageParams);
+            result.setSuccess(true);
+
+        } catch (Exception e) {
+            result.setErrorMessage("搜索评论失败：" + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

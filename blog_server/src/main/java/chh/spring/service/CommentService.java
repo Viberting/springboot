@@ -23,4 +23,7 @@ public interface CommentService {
 
     // 根据ID查询单条评论（用于编辑回显）
     Comment selectById(Integer id);
+
+    // 按条件搜索评论
+    Result searchComments(String content, Integer articleId, String author, String status, PageParams pageParams);
 }

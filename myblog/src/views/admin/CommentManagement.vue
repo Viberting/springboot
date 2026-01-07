@@ -5,6 +5,33 @@
     </el-col>
   </el-row>
 
+  <!-- 搜索表单 -->
+  <el-row style="margin: 10px 10px;">
+    <el-col :span="24">
+      <el-form :inline="true" :model="searchForm" class="search-form">
+        <el-form-item label="评论内容">
+          <el-input v-model="searchForm.content" placeholder="请输入评论内容" clearable />
+        </el-form-item>
+        <el-form-item label="文章ID">
+          <el-input v-model="searchForm.articleId" placeholder="请输入文章ID" clearable />
+        </el-form-item>
+        <el-form-item label="评论作者">
+          <el-input v-model="searchForm.author" placeholder="请输入评论作者" clearable />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+            <el-option label="待审核" :value="0" />
+            <el-option label="已审核" :value="1" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="searchComments">搜索</el-button>
+          <el-button @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-col>
+  </el-row>
+
   <!-- 评论表格 -->
   <el-row style="margin-top: 10px;">
     <el-col :span="24">
@@ -21,15 +48,16 @@
         <el-table-column prop="ip" label="IP地址" width="150" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
-            <el-tag v-if="scope.row.status === 1" type="success">已审核</el-tag>
-            <el-tag v-else type="warning">待审核</el-tag>
+            <el-tag type="success">已审核</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="created" label="评论时间" width="170" />
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button type="primary" :icon="Edit" size="small" @click="editComment(scope.row.id)">编辑</el-button>
-            <el-button type="danger" :icon="Delete" size="small" @click="showDeleteDialog(scope.row.id)">删除</el-button>
+            <div class="button-group">
+              <el-button type="primary" :icon="Edit" size="small" @click="editComment(scope.row.id)">编辑</el-button>
+              <el-button type="danger" :icon="Delete" size="small" @click="showDeleteDialog(scope.row.id)">删除</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -83,6 +111,14 @@ let myData = reactive({
   pageParams: { page: 1, rows: 10, total: 0 }
 })
 
+// 搜索表单
+let searchForm = reactive({
+  content: '',
+  articleId: '',
+  author: '',
+  status: ''
+})
+
 // 初始化加载评论列表
 getCommentPage()
 
@@ -113,17 +149,87 @@ function getCommentPage() {
   })
 }
 
+// 搜索评论
+function searchComments() {
+  // 重置到第一页
+  myData.pageParams.page = 1;
+
+  // 创建搜索参数对象（优化参数处理）
+  const searchParams = {
+    ...myData.pageParams,
+    content: searchForm.content.trim() || null,
+    articleId: searchForm.articleId ? parseInt(searchForm.articleId) : null,
+    author: searchForm.author.trim() || null,
+    status: searchForm.status !== '' ? parseInt(searchForm.status) : null
+  }
+
+  // 发送搜索请求
+  axios({
+    method: 'post',
+    url: '/api/comment/searchComments',
+    data: {
+      ...searchParams,
+      pageParams: {
+        page: searchParams.page,
+        rows: searchParams.rows,
+        total: 0
+      }
+    }
+  }).then((response) => {
+    if (response.data.success) {
+      myData.commentVOs = response.data.map.commentVOs || []
+      myData.pageParams = response.data.map.pageParams
+      if (myData.commentVOs.length === 0) {
+        ElMessageBox.alert("暂无符合条件的评论！", '提示')
+      }
+    } else {
+      ElMessageBox.alert(response.data.msg, '错误')
+    }
+  }).catch(() => {
+    ElMessageBox.alert("系统错误！", '错误')
+  })
+}
+
+// 重置搜索
+function resetSearch() {
+  searchForm.content = ''
+  searchForm.articleId = ''
+  searchForm.author = ''
+  searchForm.status = ''
+  // 重新加载所有评论
+  myData.pageParams.page = 1;
+  getCommentPage()
+}
+
 // 每页条数变化
 function handleSizeChange(newRows) {
   myData.pageParams.rows = newRows
   myData.pageParams.page = 1 // 重置为第一页
-  getCommentPage()
+  // 判断是否在搜索状态，如果是则使用搜索方法，否则使用普通方法
+  if (isSearching()) {
+    searchComments()
+  } else {
+    getCommentPage()
+  }
 }
 
 // 页码变化
 function handleCurrentChange(newPage) {
   myData.pageParams.page = newPage
-  getCommentPage()
+  // 判断是否在搜索状态，如果是则使用搜索方法，否则使用普通方法
+  if (isSearching()) {
+    searchComments()
+  } else {
+    getCommentPage()
+  }
+}
+
+// 检查是否在搜索状态
+function isSearching() {
+  return searchForm.content !== '' || 
+         searchForm.articleId !== '' || 
+         searchForm.author !== '' || 
+         searchForm.status !== ''
 }
 
 // 编辑评论：保存评论ID和分页状态，跳转至编辑页
@@ -148,7 +254,12 @@ function confirmDelete() {
     if (response.data.success) {
       ElMessageBox.alert("删除成功！", '提示')
       deleteDialogVisible.value = false
-      getCommentPage() // 刷新列表
+      // 保持当前搜索状态并刷新列表
+      if (isSearching()) {
+        searchComments()
+      } else {
+        getCommentPage()
+      }
     } else {
       ElMessageBox.alert(response.data.msg, '错误')
     }
@@ -157,3 +268,21 @@ function confirmDelete() {
   })
 }
 </script>
+
+<style scoped>
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+}
+.search-form .el-form-item {
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+
+.button-group {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+</style>

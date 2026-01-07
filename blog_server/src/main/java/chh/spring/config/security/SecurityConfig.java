@@ -44,6 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .hasRole("admin")
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
                         "/article/upload","/article/publishArticle").hasRole("admin")
+                .antMatchers("/comment/getCommentPage", "/comment/searchComments").hasRole("admin")
                 .antMatchers("/user/profile").authenticated()
                 .anyRequest().authenticated()
                 .and().formLogin().successHandler(myAuthenticationSuccessHandler)
