@@ -15,49 +15,70 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * 配置访问资源的权限、登入或登出时的设置
+ */
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    @Autowired private MyUserDetailsService myUserDetailsService;
-    @Autowired private MyAuthenticationSuccessHandler myAuthenticationSuccessHandler;
-    @Autowired private MyAuthenticationFailureHandler myAuthenticationFailureHandler;
-    @Autowired private ObjectMapper objectMapper;
+@EnableGlobalMethodSecurity(prePostEnabled = true)  //启用方法级别的权限认证
+public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配置
+    @Autowired
+    private MyUserDetailsService myUserDetailsService;
+    @Autowired
+    private MyAuthenticationSuccessHandler myAuthenticationSuccessHandler;
+    @Autowired
+    private MyAuthenticationFailureHandler myAuthenticationFailureHandler;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
+                // 1、自定义用户访问控制
+                // ========== 核心修改：添加 /user/register 到匿名访问列表 ==========
                 .antMatchers("/images/**","/article/articleSearch","/article/getIndexData1",
                         "/article/getAPageOfArticle","/article/getIndexData",
                         "/article/getArticleAndFirstPageCommentByArticleId",
                         "/article/selectById","/comment/getAPageCommentByArticleId",
-                        "/comment/insert", "/user/register", "/user/login")
-                .permitAll()
-                // ✅ 修复：只对管理员接口做权限拦截，删除冗余的/user/**
-                .antMatchers("/user/getUserPage", "/user/selectById", "/user/getAllAuthorities",
-                        "/user/adminAddUser", "/user/adminUpdateUser")
-                .hasRole("admin")
+                        "/comment/insert", "/user/register", "/user/login")// 新增：注册和登录接口匿名访问
+                .permitAll()//任意访问（无需登录）
+                // ========== 添加用户管理接口的管理员权限控制 ==========
+                .antMatchers("/user/getUserPage", "/user/selectById", "/user/getAllAuthorities", "/user/updateProfile").hasRole("admin")//用户管理接口需要管理员权限
+                // ========== 原有管理员权限接口不变 ==========
+                .antMatchers("/user/**").hasRole("admin")//其他用户管理接口需要管理员权限
                 .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
-                        "/article/upload","/article/publishArticle").hasRole("admin")
-                .antMatchers("/comment/getCommentPage", "/comment/searchComments").hasRole("admin")
-                .antMatchers("/user/profile").authenticated()
+                            "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
+                .antMatchers("/user/profile").hasAnyRole("USER", "admin") // 用户个人中心权限
+
                 .anyRequest().authenticated()
-                .and().formLogin().successHandler(myAuthenticationSuccessHandler)
-                .failureHandler(myAuthenticationFailureHandler).permitAll()
-                .and().logout().logoutUrl("/logout")
-                .logoutSuccessHandler(new LogoutSuccessHandler() {
+                .and()
+                // 2、自定义用户登录控制
+                .formLogin()
+                .successHandler(myAuthenticationSuccessHandler)//权限验证成功的处理
+                .failureHandler(myAuthenticationFailureHandler)//权限验证失败的处理
+                .permitAll()//验证通过后可以访问任意资源
+                .and()
+                .logout()//注销用户
+                .logoutUrl("/logout")//注销网址
+                .logoutSuccessHandler(new LogoutSuccessHandler() {//注销用户成功时执行
                     @Override
-                    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,Authentication authentication) throws IOException, ServletException {
+                    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
+                                                Authentication authentication) throws IOException, ServletException {
                         request.getSession().removeAttribute("user");
                         response.setContentType("application/json;charset=UTF-8");
-                        response.getWriter().write(objectMapper.writeValueAsString(new Result(true,"登出成功")));
+                        response.getWriter().write(objectMapper.writeValueAsString(
+                                new Result(true,"登出成功")));
                     }
-                }).permitAll().and().csrf().disable();
+                })
+                .permitAll()
+                .and().csrf().disable();//禁用跨站csrf攻击防御
+        //防止错误：Refused to display in a frame because it set 'X-Frame-Options' to 'DENY'
         http.headers().frameOptions().disable();
     }
 
@@ -66,6 +87,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(myUserDetailsService).passwordEncoder(passwordEncoder());
     }
 
-    @Bean public PasswordEncoder passwordEncoder(){ return new BCryptPasswordEncoder(); }
-    @Bean @Override public AuthenticationManager authenticationManagerBean() throws Exception { return super.authenticationManagerBean(); }
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();//密码加密策略
+    }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
 }

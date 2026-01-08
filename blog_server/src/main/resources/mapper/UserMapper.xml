@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chh.spring.mapper.UserMapper">
+
+    <select id="getUserPage" resultType="chh.spring.entity.vo.UserVO">
+        SELECT u.id, u.username, u.email, u.created,
+               COALESCE(GROUP_CONCAT(a.authority SEPARATOR ','), '') AS authorityNames
+        FROM t_user u
+        LEFT JOIN t_user_authority ua ON u.id = ua.user_id
+        LEFT JOIN t_authority a ON ua.authority_id = a.id
+        WHERE u.valid = #{valid}
+        <if test='username != null and username != ""'>
+            AND u.username LIKE CONCAT('%', #{username}, '%')
+        </if>
+        <if test='email != null and email != ""'>
+            AND u.email LIKE CONCAT('%', #{email}, '%')
+        </if>
+        <if test='startDate != null'>
+            AND u.created >= #{startDate}
+        </if>
+        <if test='endDate != null'>
+            AND u.created &lt;= #{endDate}
+        </if>
+        GROUP BY u.id, u.username, u.email, u.created
+        ORDER BY u.created DESC
+    </select>
+
+    <select id="checkUsernameUnique" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM t_user WHERE username = #{username} AND id != #{id}
+    </select>
+
+    <select id="getAuthorityIdsByUserId" resultType="java.lang.Integer">
+        SELECT authority_id FROM t_user_authority WHERE user_id = #{userId}
+    </select>
+
+</mapper>

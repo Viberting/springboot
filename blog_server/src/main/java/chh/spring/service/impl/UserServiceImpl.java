@@ -19,6 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -87,7 +94,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     public User findByUsername(String username) {
-        return userMapper.findByName(username);
+        User user = userMapper.findByName(username);
+        if (user != null) {
+            // 设置默认头像，如果头像字段为空或null
+            if (user.getAvatar() == null || user.getAvatar().trim().isEmpty()) {
+                user.setAvatar("/api/images/avatars.jpg"); // 设置默认头像
+            }
+        }
+        return user;
     }
     
     @Override
@@ -104,7 +118,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     public User getUserById(Integer id) {
-        return userMapper.selectById(id);
+        User user = userMapper.selectById(id);
+        if (user != null) {
+            // 设置默认头像，如果头像字段为空或null
+            if (user.getAvatar() == null || user.getAvatar().trim().isEmpty()) {
+                user.setAvatar("/api/images/avatars.jpg"); // 设置默认头像
+            }
+        }
+        return user;
+    }
+    
+    @Override
+    public String uploadImage(MultipartFile file) {
+        try {
+            // 生成唯一的文件名
+            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            
+            // 获取上传目录（从application.yml配置）
+            String uploadDir = "E:\\img\\images\\";
+            
+            // 创建目录（如果不存在）
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
+            // 保存文件
+            Path filePath = uploadPath.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath);
+            
+            // 返回文件URL（根据您的实际部署情况调整）
+            return "/api/images/" + fileName;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("文件上传失败");
+        }
     }
     
     @Override

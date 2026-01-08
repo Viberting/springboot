@@ -29,6 +29,12 @@ export const useStore = defineStore('my', () => {
     articleVOs: []
   })
 
-  return {articleId,page,commentId,home,searchState,user,editUserId, selectedAuthorityIds}
+    // ========== 新增：清空用户的方法 ==========
+    const clearUser = () => {
+        user.user = null; // 直接修改嵌套的 user 状态
+    }
+
+
+    return {articleId,page,commentId,home,searchState,user,editUserId, selectedAuthorityIds,clearUser}
 })
 

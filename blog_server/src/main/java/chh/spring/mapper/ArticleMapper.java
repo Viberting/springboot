@@ -1,6 +1,7 @@
 package chh.spring.mapper;
 
 import chh.spring.entity.Article;
+import chh.spring.entity.User;
 import chh.spring.entity.vo.ArticleVO;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -29,4 +30,20 @@ public interface ArticleMapper extends BaseMapper<Article> {
     //查询文章的方法articleSearch
     @Select("SELECT id,categories,title,created FROM t_article ${ew.customSqlSegment} ")
     IPage<ArticleVO> articleSearch(IPage<ArticleVO> page, @Param("ew") Wrapper wrapper);
+
+    // 新增：根据作者ID关联查询文章+阅读量
+    @Select("SELECT a.id, a.title, a.created, a.categories, s.hits " +
+            "FROM t_article a " +
+            "LEFT JOIN t_statistic s ON a.id = s.article_id " + // 关联阅读量表
+            "WHERE a.author_id = #{authorId} " + // 按作者ID筛选
+            "ORDER BY a.created DESC")
+    IPage<ArticleVO> selectArticleWithHitsByAuthorId(IPage<ArticleVO> page, @Param("authorId") Integer authorId);
+
+    // 新增：根据文章ID查询作者信息
+    @Select("SELECT u.* FROM t_article a LEFT JOIN t_user u ON a.author_id = u.id WHERE a.id = #{articleId}")
+    User selectAuthorByArticleId(@Param("articleId") Integer articleId);
+
+    // 新增：查询当前用户是否关注某作者（用于判断按钮状态）
+    @Select("SELECT COUNT(*) FROM t_follow WHERE follower_id = #{userId} AND followed_id = #{authorId}")
+    Integer isFollowed(@Param("userId") Integer userId, @Param("authorId") Integer authorId);
 }
