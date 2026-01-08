@@ -131,7 +131,7 @@
                 <version>2.4.2</version>
                 <configuration>
                     <mainClass>chh.spring.BlogServerApplication</mainClass>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>

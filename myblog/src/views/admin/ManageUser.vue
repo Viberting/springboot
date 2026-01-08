@@ -10,6 +10,35 @@
       </el-col>
     </el-row>
 
+    <!-- 搜索表单 -->
+    <el-row style="margin: 10px 10px;">
+      <el-col :span="24">
+        <el-form :inline="true" :model="searchForm" class="search-form">
+          <el-form-item label="用户名">
+            <el-input v-model="searchForm.username" placeholder="请输入用户名" clearable />
+          </el-form-item>
+          <el-form-item label="邮箱">
+            <el-input v-model="searchForm.email" placeholder="请输入邮箱" clearable />
+          </el-form-item>
+          <el-form-item label="注册日期">
+            <el-date-picker
+              v-model="searchForm.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              format="YYYY-MM-DD"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="searchUsers">搜索</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+
     <!-- 用户列表表格 -->
     <el-row style="margin-top: 10px;">
       <el-col :span="24">
@@ -225,6 +254,13 @@ const userForm = reactive({
 })
 let deleteUserId = ref(0)
 
+// 搜索表单
+const searchForm = reactive({
+  username: '',
+  email: '',
+  dateRange: []  // [startDate, endDate]
+})
+
 // ✅ 密码规则动态绑定isAdd，编辑时非必填
 const userRules = reactive({
   username: [
@@ -316,14 +352,87 @@ const getUserPage = async () => {
     loading.value = false
   }
 }
+
+// 搜索用户
+const searchUsers = async () => {
+  loading.value = true
+  try {
+    // 重置到第一页
+    myData.pageParams.page = 1;
+
+    // 创建搜索参数对象
+    const searchParams = {
+      ...myData.pageParams,
+      username: searchForm.username.trim() || null,
+      email: searchForm.email.trim() || null,
+      startDate: searchForm.dateRange && searchForm.dateRange.length === 2 ? searchForm.dateRange[0] : null,
+      endDate: searchForm.dateRange && searchForm.dateRange.length === 2 ? searchForm.dateRange[1] : null
+    }
+
+    const response = await axios({
+      method: "post",
+      url: "/api/user/getUserPage",
+      data: searchParams,
+      withCredentials: true
+    })
+
+    console.log("后端返回的用户数据：", response.data); // 调试日志
+
+    if (response.data.success) {
+      // 直接赋值用户列表+分页参数，兜底空数组
+      myData.userVOs = response.data.map.userVOs || [];
+      myData.pageParams = response.data.map.pageParams;
+      if (myData.userVOs.length === 0) {
+        ElMessage.info("暂无符合条件的用户数据");
+      }
+    } else {
+      ElMessageBox.alert(response.data.msg, "查询用户失败");
+      myData.userVOs = [];
+    }
+  } catch (error) {
+    console.error('搜索用户失败:', error);
+    ElMessageBox.alert("系统错误，搜索用户失败", "错误");
+    myData.userVOs = [];
+  } finally {
+    loading.value = false
+  }
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.username = ''
+  searchForm.email = ''
+  searchForm.dateRange = []
+  // 重新加载所有用户
+  myData.pageParams.page = 1;
+  getUserPage()
+}
+
+// 检查是否在搜索状态
+const isSearching = () => {
+  return searchForm.username !== '' || 
+         searchForm.email !== '' || 
+         (searchForm.dateRange && searchForm.dateRange.length > 0)
+}
+
 const handleSizeChange = (newRows) => {
   myData.pageParams.rows = newRows
   myData.pageParams.page = 1
-  getUserPage()
+  // 判断是否在搜索状态，如果是则使用搜索方法，否则使用普通方法
+  if (isSearching()) {
+    searchUsers()
+  } else {
+    getUserPage()
+  }
 }
 const handleCurrentChange = (newPage) => {
   myData.pageParams.page = newPage
-  getUserPage()
+  // 判断是否在搜索状态，如果是则使用搜索方法，否则使用普通方法
+  if (isSearching()) {
+    searchUsers()
+  } else {
+    getUserPage()
+  }
 }
 
 // 3. 新增弹窗
@@ -412,7 +521,12 @@ const submitUserForm = async () => {
         if (response.data.success) {
           ElMessage.success(response.data.msg)
           dialogVisible.value = false
-          getUserPage()
+          // 保持当前搜索状态并刷新列表
+          if (isSearching()) {
+            searchUsers()
+          } else {
+            getUserPage()
+          }
         } else {
           ElMessageBox.alert(response.data.msg, "操作失败")
         }
@@ -438,7 +552,12 @@ const confirmDelete = async () => {
     if (response.data.success) {
       ElMessage.success(response.data.msg)
       deleteDialogVisible.value = false
-      getUserPage()
+      // 保持当前搜索状态并刷新列表
+      if (isSearching()) {
+        searchUsers()
+      } else {
+        getUserPage()
+      }
     } else {
       ElMessageBox.alert(response.data.msg, "删除失败")
     }
@@ -453,4 +572,12 @@ const confirmDelete = async () => {
 .page-header { margin-bottom: 10px; }
 .el-table { margin-bottom: 10px; }
 .el-form-item { margin-bottom: 20px; }
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+}
+.search-form .el-form-item {
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
 </style>

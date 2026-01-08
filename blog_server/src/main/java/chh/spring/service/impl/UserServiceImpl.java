@@ -108,7 +108,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public IPage<UserVO> getUserPage(IPage<UserVO> page, Object valid) {
         // 创建查询条件
         QueryWrapper<UserVO> wrapper = new QueryWrapper<>();
-        return userMapper.getUserPage(page, valid, wrapper);
+        // 从PageParams中获取搜索条件，但这里需要修改方法签名以支持搜索参数
+        return userMapper.getUserPage(page, valid, null, null, null, null, wrapper);
+    }
+    
+    @Override
+    public IPage<UserVO> getUserPageWithSearch(IPage<UserVO> page, Object valid, String username, String email, LocalDate startDate, LocalDate endDate) {
+        QueryWrapper<UserVO> wrapper = new QueryWrapper<>();
+        return userMapper.getUserPage(page, valid, username, email, startDate, endDate, wrapper);
     }
     
     @Override
