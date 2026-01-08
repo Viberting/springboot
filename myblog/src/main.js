@@ -43,6 +43,12 @@ import axios from 'axios'
 //vue-axios是将axios集成到Vue.js的小包装器，可以像插件一样进行安装
 import VueAxios from 'vue-axios'
 
+// 添加请求拦截器，确保每次请求都携带cookie
+axios.interceptors.request.use(config => {
+  config.withCredentials = true;
+  return config;
+});
+
 // 添加响应拦截器来处理认证失败的情况
 axios.interceptors.response.use(
   response => {

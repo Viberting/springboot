@@ -39,30 +39,58 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                // 1、自定义用户访问控制
-                // ========== 核心修改：添加 /user/register 到匿名访问列表 ==========
-                .antMatchers("/images/**","/article/articleSearch","/article/getIndexData1",
-                        "/article/getAPageOfArticle","/article/getIndexData",
+        http
+                // 新增：启用CORS（否则跨域配置不生效）
+                .cors().and()
+                .authorizeRequests()
+                // 1、静态资源 + 公开接口（无需登录）
+                .antMatchers(
+                        "/images/**",          // 图片静态资源
+                        "/article/articleSearch",
+                        "/article/getIndexData1",
+                        "/article/getAPageOfArticle",
+                        "/article/getIndexData",
                         "/article/getArticleAndFirstPageCommentByArticleId",
-                        "/article/selectById","/comment/getAPageCommentByArticleId",
-                        "/comment/insert", "/user/register", "/user/login")// 新增：注册和登录接口匿名访问
-                .permitAll()//任意访问（无需登录）
-                // ========== 添加用户管理接口的管理员权限控制 ==========
-                .antMatchers("/user/getUserPage", "/user/selectById", "/user/getAllAuthorities", "/user/updateProfile").hasRole("admin")//用户管理接口需要管理员权限
-                // ========== 原有管理员权限接口不变 ==========
-                .antMatchers("/user/**").hasRole("admin")//其他用户管理接口需要管理员权限
-                .antMatchers("/article/deleteById","/article/getAPageOfArticleVO",
-                            "/article/upload","/article/publishArticle").hasRole("admin")//管理员权限
-                .antMatchers("/user/profile").hasAnyRole("USER", "admin") // 用户个人中心权限
+                        "/article/selectById",
+                        "/comment/getAPageCommentByArticleId",
+                        "/comment/insert",
+                        "/user/register",      // 注册
+                        "/user/login"          // 登录
+                ).permitAll()// 任意访问（无需登录）
 
+                // 2、普通用户 + 管理员都可访问的接口（核心修复：添加 /api 前缀 + 调整顺序）
+                .antMatchers(
+                        "/user/uploadImage",                       //开放上传权限
+                        "/user/profile",                          // 用户个人信息（GET/PUT）
+                        "/user/**/articles",                      // 用户文章列表（GET）
+                        "/user/**/stats",                           //统计
+                        "/article/upload",                        // 图片上传（POST）
+                        "/api/article/publishArticle",               // 发布文章
+                        "/api/article/deleteById",
+                        "/api/article/getAPageOfArticleVO",
+                        "/api/user/updateProfile"
+                ).hasAnyRole("common", "admin")
+
+                // 3、仅管理员可访问的用户管理接口
+                .antMatchers(
+                        "/api/user/getUserPage",
+                        "/api/user/selectById",
+                        "/api/user/getAllAuthorities"
+                ).hasRole("admin")
+
+                // 4、其他 /api/user/** 接口（兜底，仅管理员）
+                .antMatchers("/api/user/**").hasRole("admin")
+
+                // 5、所有其他请求都需要登录认证
                 .anyRequest().authenticated()
+
                 .and()
                 // 2、自定义用户登录控制
                 .formLogin()
                 .successHandler(myAuthenticationSuccessHandler)//权限验证成功的处理
                 .failureHandler(myAuthenticationFailureHandler)//权限验证失败的处理
                 .permitAll()//验证通过后可以访问任意资源
+
                 .and()
                 .logout()//注销用户
                 .logoutUrl("/logout")//注销网址
@@ -77,7 +105,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                     }
                 })
                 .permitAll()
+
                 .and().csrf().disable();//禁用跨站csrf攻击防御
+
         //防止错误：Refused to display in a frame because it set 'X-Frame-Options' to 'DENY'
         http.headers().frameOptions().disable();
     }

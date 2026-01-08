@@ -9,14 +9,6 @@ import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * <p>
- *
- * </p>
- *
- * @author baomidou
- * @since 2025-10-30
- */
 @Getter
 @Setter
 @TableName("t_user")
@@ -36,23 +28,21 @@ public class User implements Serializable {
     private LocalDate created;
 
     private Boolean valid;
-    
-    // 新增的个人中心字段（暂时标记为不存在，避免SQL错误）
-    @TableField(exist = false)
+
+    // 新增的个人中心字段
     private String avatar;
-    
-    @TableField(exist = false)
+
     private String intro;
-    
-    @TableField(exist = false)
+
     private String githubUrl;
-    
-    @TableField(exist = false)
+
     private String bgImage;
-    
-    @TableField(exist = false)
+
     private Integer gender;
-    
-    @TableField(exist = false)
+
     private LocalDate birthday;
+
+    // ========== 新增：关注数、粉丝数字段 ==========
+    private Integer followCount; // 对应t_user表的follow_count字段
+    private Integer fansCount;   // 对应t_user表的fans_count字段
 }

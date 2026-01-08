@@ -1,6 +1,7 @@
 // service包下有若干接口和一个子包，接口名的后缀都是Service，代表后端提供的服务（功能）。子包下是上述接口的实现类
 package chh.spring.service.impl;
 
+import chh.spring.entity.User;
 import chh.spring.entity.vo.ArticleVO;
 import chh.spring.entity.vo.CommentVO;
 import chh.spring.entity.Statistic;
@@ -8,6 +9,7 @@ import chh.spring.mapper.ArticleMapper;
 import chh.spring.entity.Article;
 import chh.spring.mapper.CommentMapper;
 import chh.spring.mapper.StatisticMapper;
+import chh.spring.mapper.UserMapper;
 import chh.spring.service.ArticleService;
 import chh.spring.tools.ArticleSearch;
 import chh.spring.tools.PageParams;
@@ -18,11 +20,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Wrapper;
 import java.util.Date;
 import java.util.List;
@@ -44,6 +50,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private StatisticMapper statisticMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     //分页查询文章
     public Result getAPageOfArticle(PageParams pageParams){
@@ -108,7 +117,23 @@ public class ArticleServiceImpl implements ArticleService {
 
     public Result getArticleAndFirstPageCommentByArticleId(Integer articleId, PageParams pageParams){
         Result result = new Result();
+        // 查询文章基础信息
+        Article article = articleMapper.selectById(articleId);
+        result.getMap().put("article", article);
         result.getMap().put("article",articleMapper.selectById(articleId));
+
+        // 2. 查询作者信息（核心新增）
+        User author = articleMapper.selectAuthorByArticleId(articleId);
+        result.getMap().put("author", author);
+
+        // 3. 查询当前登录用户是否关注该作者（需从Security上下文获取当前用户ID）
+        Integer currentUserId = getCurrentUserId(); // 需实现：从登录态获取用户ID
+        Boolean isFollowed = false;
+        if (currentUserId != null && author != null) {
+            Integer count = articleMapper.isFollowed(currentUserId, author.getId());
+            isFollowed = count > 0;
+        }
+        result.getMap().put("isFollowed", isFollowed);
         
         // 修复分页查询评论的调用方式
         Page<CommentVO> page = new Page<>(pageParams.getPage(), pageParams.getRows());
@@ -121,23 +146,84 @@ public class ArticleServiceImpl implements ArticleService {
         statisticMapper.updateById(statistic);
         return result;
     }
+
+    // 辅助方法：从Security上下文获取当前登录用户ID（需根据你的认证方式调整）
+    private Integer getCurrentUserId() {
+        try {
+            // Spring Security示例：获取当前用户信息
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) auth.getPrincipal();
+                // 根据用户名查询用户ID（需注入UserMapper）
+                User user = userMapper.findByName(userDetails.getUsername());
+                return user.getId();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null; // 未登录返回null
+    }
     @SneakyThrows
     @Override
-    public String upload(MultipartFile file){//固定套路，MultipartFile file中存放了上传的文件
+    public String upload(MultipartFile file){
+        // 添加日志记录
+        System.out.println("开始上传文件: " + file.getOriginalFilename());
+
         final File folder = new File(uploadImagesDir);
         if(!folder.exists()){
-            folder.mkdirs();//创建文件夹
+            System.out.println("创建上传目录: " + uploadImagesDir);
+            boolean created = folder.mkdirs();//创建文件夹
+            if (!created) {
+                System.out.println("创建上传目录失败: " + uploadImagesDir);
+                throw new RuntimeException("创建上传目录失败");
+            }
         }
-        //获得上传文件的扩展名
-        String type = file.getOriginalFilename().substring(
-                file.getOriginalFilename().lastIndexOf(".")
+
+        // 检查目录是否可写
+        if (!folder.canWrite()) {
+            System.out.println("上传目录不可写: " + uploadImagesDir);
+            throw new RuntimeException("上传目录不可写");
+        }
+
+        // 获得上传文件的扩展名
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.contains(".")) {
+            System.out.println("文件名无效: " + originalFilename);
+            throw new RuntimeException("文件名无效");
+        }
+
+        // 使用原始文件名
+        String type = originalFilename.substring(
+                originalFilename.lastIndexOf(".")
         );
-        //为文件随机取名
-        final String newName = UUID.randomUUID() + type;
-        file.transferTo(new File(folder, newName));//保存文件
-        String url = "/api/images/" + newName;//文件的相对网址
-        return url;
+        String newName = originalFilename; // 直接使用原始文件名
+
+        File destFile = new File(folder, newName);
+
+        // 检查文件是否已存在，如果存在则添加数字后缀
+        int counter = 1;
+        while (destFile.exists()) {
+            counter++;
+            newName = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + "_" + counter + type;
+            destFile = new File(folder, newName);
+            if (counter > 100) { // 防止无限循环
+                throw new RuntimeException("无法生成唯一的文件名");
+            }
+        }
+
+        try {
+            file.transferTo(destFile);//保存文件
+            String url = "/api/images/" + newName;//文件的相对网址
+            System.out.println("文件上传成功: " + url);
+            return url;
+        } catch (IOException e) {
+            System.out.println("文件上传失败: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("文件上传失败: " + e.getMessage());
+        }
     }
+
+
 
     // 发布文章
     @Transactional  //表示publish方法会被作为一个事务处理，确保文章和统计记录同时添加或均不添加
@@ -207,16 +293,25 @@ public class ArticleServiceImpl implements ArticleService {
     // 根据作者ID获取文章列表
     @Override
     public Result getArticlesByAuthorId(Integer authorId, PageParams pageParams) {
-        QueryWrapper<Article> wrapper = new QueryWrapper<>();
-        wrapper.eq("author_id", authorId);
-        wrapper.orderByDesc("created");
+        // 1. 处理分页参数
+        long currentPage = pageParams.getPage() != null ? pageParams.getPage() : 1;
+        long pageSize = pageParams.getRows() != null ? pageParams.getRows() : 5;
+        // 注意：这里用ArticleVO的分页对象
+        IPage<ArticleVO> page = new Page<>(currentPage, pageSize);
 
-        Page<Article> page = new Page<>(pageParams.getPage(), pageParams.getRows());
-        IPage<Article> aPage = articleMapper.selectPage(page, wrapper);
+        // 2. 调用新增的关联查询方法（返回包含hits的ArticleVO）
+        IPage<ArticleVO> articleVOPage = articleMapper.selectArticleWithHitsByAuthorId(page, authorId);
+
+        // 3. 封装结果（和原有逻辑一致，只是数据换成ArticleVO）
         Result result = new Result();
-        pageParams.setTotal(aPage.getTotal());
-        result.getMap().put("articles", aPage.getRecords());
-        result.getMap().put("pageParams", pageParams);
+        PageParams resPageParams = new PageParams();
+        resPageParams.setPage(currentPage);
+        resPageParams.setRows(pageSize);
+        resPageParams.setTotal(articleVOPage.getTotal()); // 总条数
+        result.setSuccess(true);
+        // 这里返回的是ArticleVO列表（包含hits字段）
+        result.getMap().put("articles", articleVOPage.getRecords());
+        result.getMap().put("pageParams", resPageParams);
         return result;
     }
 }

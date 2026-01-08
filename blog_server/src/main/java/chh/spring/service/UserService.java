@@ -7,6 +7,7 @@ import chh.spring.tools.Result;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,4 +35,7 @@ public interface UserService extends IService<User> {
     
     // 根据ID查询用户详情
     User getUserById(Integer id);
+    
+    // 上传图片
+    String uploadImage(MultipartFile file);
 }
