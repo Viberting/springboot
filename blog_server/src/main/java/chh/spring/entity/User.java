@@ -35,7 +35,10 @@ public class User implements Serializable {
 
     private LocalDate created;
 
-    private Boolean valid;
+    private Integer valid;
+    
+    private Integer followCount;
+    private Integer fansCount;
     
     // 新增的个人中心字段（暂时标记为不存在，避免SQL错误）
     @TableField(exist = false)

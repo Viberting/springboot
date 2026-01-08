@@ -79,7 +79,10 @@ public class UserController {
             // 2. 核心修复：t_user.valid是tinyint(1) 数值类型，传 Integer 0/1，不要传Boolean/null
             // 传null会导致查询条件拼接错误，直接查不到数据，这里给默认值1=查询有效用户
             Integer validStatus = pageParams.getValid() == null ? 1 : Integer.valueOf(String.valueOf(pageParams.getValid()));
-            IPage<UserVO> userPage = this.userService.getUserPage(page, validStatus);
+            // 使用新的搜索方法
+            IPage<UserVO> userPage = this.userService.getUserPageWithSearch(page, validStatus, 
+                pageParams.getUsername(), pageParams.getEmail(), 
+                pageParams.getStartDate(), pageParams.getEndDate());
 
             Result result = new Result();
             result.setSuccess(true);
@@ -235,8 +238,8 @@ public class UserController {
             if(user == null){
                 return new Result(false, "用户不存在");
             }
-            // 逻辑删除：不是删除数据，而是把账号状态改为禁用 valid=false
-            user.setValid(false);
+            // 逻辑删除：不是删除数据，而是把账号状态改为禁用 valid=0
+            user.setValid(0);
             boolean update = userService.updateById(user);
             if(update){
                 return new Result(true, "用户禁用成功");

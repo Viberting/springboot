@@ -33,4 +33,23 @@
         SELECT authority_id FROM t_user_authority WHERE user_id = #{userId}
     </select>
 
+    <!-- 增加关注数 -->
+    <update id="incrFollowCount">
+        UPDATE t_user SET follow_count = follow_count + 1 WHERE id = #{userId}
+    </update>
+    
+    <!-- 增加粉丝数 -->
+    <update id="incrFansCount">
+        UPDATE t_user SET fans_count = fans_count + 1 WHERE id = #{userId}
+    </update>
+    
+    <!-- 减少关注数 -->
+    <update id="decrFollowCount">
+        UPDATE t_user SET follow_count = CASE WHEN follow_count > 0 THEN follow_count - 1 ELSE 0 END WHERE id = #{userId}
+    </update>
+    
+    <!-- 减少粉丝数 -->
+    <update id="decrFansCount">
+        UPDATE t_user SET fans_count = CASE WHEN fans_count > 0 THEN fans_count - 1 ELSE 0 END WHERE id = #{userId}
+    </update>
 </mapper>

@@ -6,6 +6,7 @@ import chh.spring.entity.vo.UserVO;
 import chh.spring.tools.Result;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,4 +36,7 @@ public interface UserService extends IService<User> {
     
     // 管理员新增用户
     Result adminAddUser(User user);
+    
+    // 上传图片
+    String uploadImage(MultipartFile file);
 }
