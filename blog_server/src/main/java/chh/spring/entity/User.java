@@ -36,26 +36,14 @@ public class User implements Serializable {
     private LocalDate created;
 
     private Integer valid;
-    
+
+    // 新增的个人中心字段
     private Integer followCount;
     private Integer fansCount;
-    
-    // 新增的个人中心字段（暂时标记为不存在，避免SQL错误）
-    @TableField(exist = false)
     private String avatar;
-    
-    @TableField(exist = false)
     private String intro;
-    
-    @TableField(exist = false)
     private String githubUrl;
-    
-    @TableField(exist = false)
     private String bgImage;
-    
-    @TableField(exist = false)
     private Integer gender;
-    
-    @TableField(exist = false)
     private LocalDate birthday;
 }

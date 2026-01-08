@@ -488,7 +488,7 @@ const getUserProfileById = async (targetUserId) => {
   if (cancelToken) cancelToken.cancel('取消请求')
   cancelToken = axios.CancelToken.source()
   try {
-    const res = await axios.post('/api/user/selectById', { id: targetUserId }, {
+    const res = await axios.get(`/api/user/selectById/${targetUserId}`, {
       cancelToken: cancelToken.token,
       withCredentials: true
     })

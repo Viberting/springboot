@@ -102,6 +102,7 @@ public class CommentController {
             // 从session中获取用户名
             chh.spring.entity.dto.UserDTO user = (chh.spring.entity.dto.UserDTO) userObj;
             comment.setAuthor(user.getUsername());
+            comment.setUserId(user.getId()); // 新增：存入用户ID
             
             commentService.addComment(comment);
             result.getMap().put("comment", comment);

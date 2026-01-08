@@ -3,6 +3,9 @@ package chh.spring.controller;
 import chh.spring.entity.User;
 
 import chh.spring.entity.vo.UserVO;
+import chh.spring.mapper.UserMapper;
+import chh.spring.service.ArticleService;
+import chh.spring.service.FollowService;
 import chh.spring.service.UserService;
 import chh.spring.mapper.UserAuthorityMapper;
 import chh.spring.tools.Result;
@@ -11,6 +14,7 @@ import chh.spring.entity.dto.UserProfileDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,9 +27,20 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    @Autowired private UserService userService;
-    @Autowired private UserAuthorityMapper userAuthorityMapper;
-    @Autowired private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ArticleService articleService; // 注入文章服务
+    @Autowired
+    private UserAuthorityMapper userAuthorityMapper;
+    // 注入密码加密器（Spring Security配置的BCryptPasswordEncoder）
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    // ========== 新增：注入FollowService ==========
+    @Autowired
+    private FollowService followService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
@@ -118,6 +133,7 @@ public class UserController {
         }
     }
 
+    // 新增：更新用户个人资料接口
     @PostMapping("/updateProfile")
     public Result updateProfile(@RequestBody UserProfileDTO profileDTO) {
         try {
@@ -150,17 +166,38 @@ public class UserController {
         }
     }
 
-    // ✅ 核心修复：查询用户+用户的权限ID集合，解决前端回显问题
+    // 新增：GET版本（个人主页用）
+    @GetMapping("/selectById/{id}")
+    public Result selectByIdGet(@PathVariable Integer id) {
+        // 复用原有逻辑，直接调用上面的核心逻辑
+        return selectById(id, null);
+    }
+
+    // 原有POST版本（用户管理用）
     @PostMapping("/selectById")
-    public Result selectById(@RequestParam Integer id) {
+    public Result selectByIdPost(
+            @RequestParam(required = false) Integer id,
+            @RequestBody(required = false) Map<String, Integer> params
+    ) {
+        Integer targetId = params != null ? params.get("id") : id;
+        return selectById(targetId, null);
+    }
+
+    // 抽离核心逻辑（复用）
+    private Result selectById(Integer targetId, Map<String, Integer> params) {
+        // 把上面的try-catch逻辑移到这里，实现代码复用
         try {
-            User user = this.userService.getUserById(id);
+            if (targetId == null) {
+                Result result = new Result();
+                result.setErrorMessage("用户ID不能为空");
+                return result;
+            }
+            User user = this.userService.getUserById(targetId);
             if (user != null) {
                 Result result = new Result();
                 result.setSuccess(true);
                 result.getMap().put("user", user);
-                // 查询当前用户的所有权限ID
-                List<Integer> authorityIds = userAuthorityMapper.selectAuthorityIdsByUserId(id);
+                List<Integer> authorityIds = userAuthorityMapper.selectAuthorityIdsByUserId(targetId);
                 result.getMap().put("authorityIds", authorityIds);
                 return result;
             } else {
@@ -252,5 +289,147 @@ public class UserController {
             e.printStackTrace();
             return result;
         }
+    }
+
+    // ========== 简化：用户统计数据接口（只查文章数，关注/粉丝显示0） ==========
+    @GetMapping("/{userId}/stats")
+    public Result getUserStats(@PathVariable Integer userId) {
+        Result result = new Result();
+        try {
+            // 复用你已有的ArticleService方法：根据作者ID查文章列表，取总数
+            PageParams pageParams = new PageParams();
+            pageParams.setPage(1L);
+            pageParams.setRows(10L);
+            Result articleResult = articleService.getArticlesByAuthorId(userId, pageParams);
+
+            // 从返回结果中取文章总数
+            int articles = 0;
+            if (articleResult.getMap().containsKey("pageParams")) {
+                PageParams resPageParams = (PageParams) articleResult.getMap().get("pageParams");
+                articles = Math.toIntExact(resPageParams.getTotal());
+            }
+
+            // 关注/粉丝数先显示0（后续实现关注功能后再改）
+            int following = 0;
+            int followers = 0;
+
+            result.setSuccess(true);
+            result.getMap().put("articles", articles);
+            result.getMap().put("following", following);
+            result.getMap().put("followers", followers);
+        } catch (Exception e) {
+            result.setErrorMessage("获取用户统计数据失败：" + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // ==========用户文章列表接口 ==========
+    @GetMapping("/{userId}/articles")
+    public Result getUserArticles(
+            @PathVariable Integer userId,
+            @RequestParam(defaultValue = "1") Integer page, // 给默认值，避免空指针
+            @RequestParam(defaultValue = "5") Integer size) { // 给默认值
+        Result result = new Result();
+        try {
+            PageParams pageParams = new PageParams();
+            // 直接用Integer，避免Long转换的潜在问题
+            pageParams.setPage(Long.valueOf(page));
+            pageParams.setRows(Long.valueOf(size));
+
+            Result articleResult = articleService.getArticlesByAuthorId(userId, pageParams);
+            if (articleResult.isSuccess()) { // 新增：判断文章查询是否成功
+                result.setSuccess(true);
+                result.getMap().put("articles", articleResult.getMap().get("articles"));
+                result.getMap().put("pageParams", articleResult.getMap().get("pageParams"));
+            } else {
+                result.setErrorMessage(articleResult.getMsg());
+            }
+        } catch (Exception e) {
+            result.setErrorMessage("获取文章失败：" + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // 新增：密码修改接口
+    @PostMapping("/updatePassword")
+    public Result updatePassword(@RequestBody Map<String, String> passwordMap) {
+        try {
+            // 1. 获取当前登录用户
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            User user = userService.findByUsername(username);
+
+            if (user == null) {
+                Result result = new Result();
+                result.setErrorMessage("用户不存在");
+                return result;
+            }
+
+            // 2. 获取请求参数
+            String oldPassword = passwordMap.get("oldPassword");
+            String newPassword = passwordMap.get("newPassword");
+
+            // 3. 验证原密码
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                Result result = new Result();
+                result.setErrorMessage("原密码错误");
+                return result;
+            }
+
+            // 4. 加密新密码并更新
+            user.setPassword(passwordEncoder.encode(newPassword));
+            boolean updated = userService.updateById(user);
+
+            Result result = new Result();
+            if (updated) {
+                result.setSuccess(true);
+                result.setMsg("密码修改成功");
+            } else {
+                result.setErrorMessage("密码修改失败");
+            }
+            return result;
+        } catch (Exception e) {
+            Result result = new Result();
+            result.setErrorMessage("密码修改异常：" + e.getMessage());
+            e.printStackTrace();
+            return result;
+        }
+    }
+
+    // ==========用户全量统计接口（新增） ==========
+    @GetMapping("/{userId}/fullStats")
+    public Result getUserFullStats(@PathVariable Integer userId) {
+        Result result = new Result();
+        try {
+            // 1. 获取文章总数（复用原有文章分页接口的逻辑，取总数）
+            PageParams pageParams = new PageParams();
+            pageParams.setPage(1L);
+            pageParams.setRows(1L); // 只查1条，只为获取总数
+            Result articleResult = articleService.getArticlesByAuthorId(userId, pageParams);
+            int articleCount = 0;
+            if (articleResult.isSuccess()) {
+                PageParams pageData = (PageParams) articleResult.getMap().get("pageParams");
+                articleCount = (pageData.getTotal() != null && pageData.getTotal() > 0)
+                        ? pageData.getTotal().intValue()
+                        : 0;
+            }
+
+            // 2. 获取关注数/粉丝数（调用FollowService）
+            Map<String, Integer> followCountMap = followService.getFollowAndFansCount(userId);
+            int followCount = followCountMap.getOrDefault("followCount", 0);
+            int fansCount = followCountMap.getOrDefault("fansCount", 0);
+
+            // 3. 封装返回数据
+            result.setSuccess(true);
+            result.getMap().put("articleCount", articleCount); // 文章总数
+            result.getMap().put("followCount", followCount);   // 关注数
+            result.getMap().put("fansCount", fansCount);       // 粉丝数
+        } catch (Exception e) {
+            result.setErrorMessage("获取统计数据失败：" + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
     }
 }

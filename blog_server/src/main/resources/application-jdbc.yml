@@ -4,10 +4,10 @@ spring:
     # 数据源名称
     name: defaultDataSource
     # 数据库连接地址
-    url: jdbc:mysql://localhost:3306/my_blog_system2?serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/my_blog_system?serverTimezone=UTC
     # 数据库用户名&密码
     username: root
-    password: wei740411
+    password: 35marblue381
     # 数据库连接池配置
     type: com.alibaba.druid.pool.DruidDataSource
     initialSize: 20 # 初始化连接数

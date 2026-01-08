@@ -19,4 +19,5 @@ public class Comment {
     // 新增字段：适配你的表
     private String ip; // 评论者IP
     private String status; // 评论状态（如approved）
+    private Integer userId; // 新增：关联用户ID
 }

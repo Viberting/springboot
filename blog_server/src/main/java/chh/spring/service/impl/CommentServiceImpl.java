@@ -46,7 +46,8 @@ public class CommentServiceImpl implements CommentService {
     public Result getCommentByArticleId(Integer articleId, PageParams pageParams) {
         Result result = new Result();
         Page<CommentVO> page = new Page<>(pageParams.getPage(), pageParams.getRows());
-        IPage<CommentVO> commentPage = commentMapper.getCommentByArticleId(page, articleId);
+        // 关键修改：调用关联用户表的 getAPageCommentByArticleId 方法
+        IPage<CommentVO> commentPage = commentMapper.getAPageCommentByArticleId(page, articleId);
 
         pageParams.setTotal(commentPage.getTotal());
         result.getMap().put("commentVOs", commentPage.getRecords());

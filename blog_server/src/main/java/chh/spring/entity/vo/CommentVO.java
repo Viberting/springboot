@@ -14,4 +14,5 @@ public class CommentVO {
     // 新增字段
     private String ip;
     private String status;
+    private String userAvatar; // 用户头像
 }
