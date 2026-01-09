@@ -63,31 +63,33 @@ insert  into `t_authority`(`id`,`authority`) values
 CREATE TABLE `t_comment` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '评论id',
   `article_id` int NOT NULL COMMENT '关联的文章id',
-  `created` date NOT NULL COMMENT '评论时间',
+  `created` datetime NOT NULL COMMENT '评论时间（含时分秒）',
   `ip` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '评论用户登录的ip地址',
   `content` text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '评论内容',
   `status` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT 'approved' COMMENT '评论状态',
   `author` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '评论用户用户名',
   `is_deleted` int DEFAULT '0',
+  `user_id` int DEFAULT NULL COMMENT '关联的用户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
 
 /*Data for the table `t_comment` */
 
-insert  into `t_comment`(`id`,`article_id`,`created`,`ip`,`content`,`status`,`author`,`is_deleted`) values 
-(1,12,'2018-12-13','0:0:0:0:0:0:0:1','很不错，不过这文章排版不太好看啊','approved','李四',0),
-(2,11,'2018-12-13','0:0:0:0:0:0:0:1','很不错的原理分析，受用了！','approved','李四',0),
-(3,10,'2018-12-13','0:0:0:0:0:0:0:1','关于Docker虚拟容器的讲解挺好的额，学习中','approved','李四',0),
-(9,1,'2018-12-13','0:0:0:0:0:0:0:1','非常不错，赞一个！','approved','李四',0),
-(10,1,'2018-12-13','0:0:0:0:0:0:0:1','博主，这资料怎么弄的？有相关资源和教材推荐吗？','approved','李四',0),
-(11,1,'2018-12-13','0:0:0:0:0:0:0:1','很详细，感谢...','approved','东方不败',0),
-(12,1,'2018-12-13','0:0:0:0:0:0:0:1','很全，努力学习中...','approved','东方不败',0),
-(13,1,'2018-12-13','0:0:0:0:0:0:0:1','好东西，先收藏起来，哈哈','approved','tom',0),
-(14,8,'2018-12-13','0:0:0:0:0:0:0:1','very good blog','approved','tom',0),
-(35,27,'2025-12-16',NULL,'hhh','1','tom',1),
-(36,27,'2025-12-17',NULL,'测试编辑评论管理','approved','tom',0),
-(37,27,'2025-12-18',NULL,'测试弹窗','approved','李四',0),
-(38,12,'2026-01-06',NULL,'受益匪浅！','approved','tom',0);
+insert  into `t_comment`(`id`,`article_id`,`created`,`ip`,`content`,`status`,`author`,`is_deleted`,`user_id`) values 
+(1,12,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','很不错，不过这文章排版不太好看啊','approved','李四',0,2),
+(2,11,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','很不错的原理分析，受用了！','approved','李四',0,2),
+(3,10,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','关于Docker虚拟容器的讲解挺好的额，学习中','approved','李四',0,2),
+(9,1,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','非常不错，赞一个！','approved','李四',0,2),
+(10,1,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','博主，这资料怎么弄的？有相关资源和教材推荐吗？','approved','李四',0,2),
+(11,1,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','很详细，感谢...','approved','东方不败',0,3),
+(12,1,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','很全，努力学习中...','approved','东方不败',0,3),
+(13,1,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','好东西，先收藏起来，哈哈','approved','tom',0,4),
+(14,8,'2018-12-13 00:00:00','0:0:0:0:0:0:0:1','very good blog','approved','tom',0,4),
+(35,27,'2025-12-16 00:00:00',NULL,'hhh','1','tom',1,4),
+(36,27,'2025-12-17 00:00:00',NULL,'测试编辑评论管理','approved','tom',0,4),
+(37,27,'2025-12-18 00:00:00',NULL,'测试弹窗','approved','李四',0,2),
+(38,12,'2026-01-06 00:00:00',NULL,'受益匪浅！','approved','tom',0,4),
+(39,4,'2026-01-08 00:00:00',NULL,'谢谢大家的喜欢！','approved','tom',0,4);
 
 /*Table structure for table `t_follow` */
 
@@ -102,7 +104,7 @@ CREATE TABLE `t_follow` (
   KEY `fk_follow_followed` (`followed_id`),
   CONSTRAINT `fk_follow_followed` FOREIGN KEY (`followed_id`) REFERENCES `t_user` (`id`),
   CONSTRAINT `fk_follow_follower` FOREIGN KEY (`follower_id`) REFERENCES `t_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='用户关注关系表';
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='用户关注关系表';
 
 /*Data for the table `t_follow` */
 
@@ -110,8 +112,8 @@ insert  into `t_follow`(`id`,`follower_id`,`followed_id`,`created`,`is_deleted`)
 (9,2,1,'2026-01-07',0),
 (10,2,4,'2026-01-07',0),
 (11,2,3,'2026-01-07',0),
-(12,4,2,'2026-01-07',0),
-(18,4,1,'2026-01-07',0);
+(19,4,2,'2026-01-08',0),
+(20,4,1,'2026-01-08',0);
 
 /*Table structure for table `t_statistic` */
 
@@ -129,15 +131,15 @@ insert  into `t_statistic`(`id`,`article_id`,`hits`,`comments_num`) values
 (1,1,113,5),
 (2,2,7,0),
 (3,3,5,0),
-(4,4,5,0),
+(4,4,7,0),
 (5,5,6,0),
 (6,6,15,0),
 (7,7,7,0),
-(8,8,23,1),
+(8,8,24,1),
 (9,9,25,0),
 (10,10,27,1),
-(11,11,31,1),
-(12,12,105,1),
+(11,11,36,1),
+(12,12,143,1),
 (16,23,36,0),
 (17,22,6,0),
 (18,24,4,0),
@@ -169,9 +171,9 @@ CREATE TABLE `t_user` (
 
 insert  into `t_user`(`id`,`username`,`password`,`email`,`created`,`valid`,`avatar`,`intro`,`github_url`,`bg_image`,`gender`,`birthday`,`follow_count`,`fans_count`) values 
 (1,'admin','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','2127269781@qq.com','2018-10-01',1,'/api/images/f07ace03-30a5-41d7-8e9d-0d1d7ae705bf_admin_avatar.png','普普通通的社畜一枚','','/api/images/c0b7a6a0-443a-41d8-a9df-ffee2ed99634_bg_image3.png',2,NULL,0,2),
-(2,'李四','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','1768653040@qq.com','2018-11-13',1,'','','','',2,NULL,3,1),
+(2,'李四','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','1768653040@qq.com','2018-11-13',1,'/api/images/99d3f33b-5a52-4730-8b23-e9fb3432a9e9_avatar_2.png','','','/api/images/8f6aed99-fe22-4752-ac45-08c797a40c33_bg_image2.png',0,'2006-01-11',3,1),
 (3,'东方不败','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','13718391550@163.com','2018-12-18',1,'','','','',2,NULL,0,1),
-(4,'tom','$2a$10$2v57mUg5LSwXAEVkj1tEweYe/bEY2wYk42n1KPEwsJWGgkzFU1n3q','asexeees@sohu.com','2018-12-03',1,'/api/images/11db407a-292e-4ed6-a0f3-5fcbf794b167_avatar_1.png','先悦己，再悦人！','https://github.com/Viberting/springboot.git','/api/images/9cc35d26-d589-487f-b961-3a6b29703fda_bg_image2.png',1,'2004-12-10',2,1);
+(4,'tom','$2a$10$PTMSJbOKqbsEs4hB2sRGUe1D6g3c9Y/mOMOaTCZm3ARYCslTnTpf2','asexeees@sohu.com','2018-12-03',1,'/api/images/79b1c40c-2109-43b8-98cd-1e84e408d05e_avatar_1.png','先悦己，再悦人！','https://github.com/Viberting/springboot.git','/api/images/808d80e0-589f-4b61-a091-fc676a57d4cb_bg_image1.png',1,'2004-12-10',2,1);
 
 /*Table structure for table `t_user_authority` */
 
