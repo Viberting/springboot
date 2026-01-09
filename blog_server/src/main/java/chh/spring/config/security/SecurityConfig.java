@@ -79,7 +79,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                         // 第二段独有的接口（补充进来，权限和第一段一致）
                         "/article/publishArticle",                 // 无api前缀的发布文章
                         "/article/deleteById",                     // 无api前缀的删除文章
-                        "/article/getAPageOfArticleVO"             // 无api前缀的文章分页
+                        "/article/getAPageOfArticleVO",             // 无api前缀的文章分页
+                        "/comment/getAPageCommentByArticleId",     // 文章评论分页
+                        "/comment/insert",                         // 插入评论
+                        "/comment/getCommentTreeByArticleId"       // 获取评论树
                 ).hasAnyRole("common", "admin")  // 保留第一段的角色名称（第二段错写USER，修正）
 
                 // ========== 3、仅管理员可访问的接口 ==========
@@ -88,6 +91,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {  //权限配�
                         // 原有第一段接口
                         "/api/user/getUserPage",
                         "/api/user/getAllAuthorities",
+                        // 评论管理接口
+                        "/admin/comment/**",
+                        "/api/comment/getCommentPage",
+                        "/api/comment/deleteComment",
+                        "/api/comment/batchDeleteComment",
+                        "/api/comment/updateStatus",
+                        "/api/comment/searchComments",
+                        "/api/comment/detail/**",
                         // 第二段独有的管理员接口（补充进来，权限为admin）
                         "/user/getUserPage",
                         "/user/getAllAuthorities"

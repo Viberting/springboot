@@ -1,7 +1,6 @@
 package chh.spring.service;
 
 import chh.spring.entity.Comment;
-import chh.spring.entity.vo.CommentVO;
 import chh.spring.tools.PageParams;
 import chh.spring.tools.Result;
 
@@ -11,6 +10,12 @@ public interface CommentService {
 
     // 根据文章ID查询评论
     Result getCommentByArticleId(Integer articleId, PageParams pageParams);
+
+    // 新增：根据父评论ID查询回复
+    Result getCommentReplies(Integer parentId, PageParams pageParams);
+
+    // 新增：获取文章的完整评论树（包含多级回复）
+    Result getCommentTreeByArticleId(Integer articleId);
 
     // 新增评论
     void addComment(Comment comment);

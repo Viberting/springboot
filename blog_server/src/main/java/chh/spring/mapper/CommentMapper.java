@@ -21,40 +21,51 @@ public interface CommentMapper extends BaseMapper<Comment> {
             "${ew.customSqlSegment}") // 动态条件（排序、筛选）
     IPage<CommentVO> getCommentPage(IPage<CommentVO> page, @Param("ew") Wrapper<CommentVO> wrapper);
 
-    // 根据文章ID查询评论（用于文章详情页展示评论）
-// CommentMapper.java
-// 删掉原来的 getCommentByArticleId，替换为这个版本
+    // 根据文章ID查询评论（用于文章详情页展示评论，保留关联用户表拿头像的逻辑）
     @Select("SELECT " +
             "t_comment.*, " +
             "t_article.title AS articleTitle, " +
-            "t_user.avatar AS userAvatar " + // 关联用户表拿头像
+            "t_user.avatar AS userAvatar " + // 关联用户表拿头像（保留原有逻辑）
             "FROM t_comment " +
             "LEFT JOIN t_article ON t_comment.article_id = t_article.id " + // 左连接文章表，保证评论不丢
-            "LEFT JOIN t_user ON t_comment.user_id = t_user.id " + // 左连接用户表，拿头像
-            "WHERE t_comment.article_id = #{articleId} " +
+            "LEFT JOIN t_user ON t_comment.user_id = t_user.id " + // 左连接用户表，拿头像（保留）
+            "WHERE (#{articleId} IS NULL OR #{articleId} <= 0 OR t_comment.article_id = #{articleId}) " +
             "AND t_comment.is_deleted = 0 " +
             "AND (t_comment.status = 'approved' OR t_comment.status = '1')")
     IPage<CommentVO> getCommentByArticleId(IPage<CommentVO> page, @Param("articleId") Integer articleId);
 
-    // 根据文章ID分页查询评论（用于文章详情页展示评论）
+    // 根据文章ID分页查询评论（用于文章详情页展示评论，保留关联用户表拿头像）
     @Select("SELECT " +
             "t_comment.*, " +
             "t_article.title AS articleTitle, " +
-            "t_user.avatar AS userAvatar " + // 直接返回带/api的路径，不替换
+            "t_user.avatar AS userAvatar " + // 直接返回带/api的路径，不替换（保留原有逻辑）
             "FROM t_comment " +
             "LEFT JOIN t_article ON t_comment.article_id = t_article.id " +
             "LEFT JOIN t_user ON t_comment.user_id = t_user.id " +
-            "WHERE t_comment.article_id = #{articleId} " +
+            "WHERE (#{articleId} IS NULL OR #{articleId} <= 0 OR t_comment.article_id = #{articleId}) " +
             "AND t_comment.is_deleted = 0 " +
             "AND (t_comment.status = 'approved' OR t_comment.status = '1')")
     IPage<CommentVO> getAPageCommentByArticleId(IPage<CommentVO> page, @Param("articleId") Integer articleId);
 
+    // 新增：查询评论的回复（适配回复场景，同时保留关联用户表拿头像）
+    @Select("SELECT " +
+            "t_comment.*, " +
+            "t_article.title AS articleTitle, " +
+            "t_user.avatar AS userAvatar " + // 回复评论也展示用户头像（对齐原有逻辑）
+            "FROM t_comment " +
+            "LEFT JOIN t_article ON t_comment.article_id = t_article.id " + // 左连接保证回复不丢
+            "LEFT JOIN t_user ON t_comment.user_id = t_user.id " + // 回复评论关联用户头像
+            "WHERE (#{parentId} IS NULL OR #{parentId} <= 0 OR t_comment.parent_id = #{parentId}) " + // 根据父评论ID查回复
+            "AND t_comment.is_deleted = 0 " +
+            "AND (t_comment.status = 'approved' OR t_comment.status = '1') " +
+            "ORDER BY t_comment.created ASC") // 回复按时间升序展示
+    IPage<CommentVO> getCommentReplies(IPage<CommentVO> page, @Param("parentId") Integer parentId);
 
-    // 搜索评论的SQL（兼容status的字符串/数字格式）
-    @Select("SELECT t_comment.*, t_article.title AS articleTitle, t_user.avatar AS userAvatar " + // 新增t_user.avatar AS userAvatar
-            "FROM t_comment " + // 拆分行，便于阅读
-            "LEFT JOIN t_article ON t_comment.article_id = t_article.id " + // 改隐式内连接为显式左连接（核心）
-            "LEFT JOIN t_user ON t_comment.user_id = t_user.id " + // 新增左连接user表（仅为拿头像，不影响原有逻辑）
+    // 搜索评论的SQL（兼容status的字符串/数字格式，保留关联用户表拿头像）
+    @Select("SELECT t_comment.*, t_article.title AS articleTitle, t_user.avatar AS userAvatar " + // 保留userAvatar
+            "FROM t_comment " +
+            "LEFT JOIN t_article ON t_comment.article_id = t_article.id " + // 保留左连接（核心）
+            "LEFT JOIN t_user ON t_comment.user_id = t_user.id " + // 保留左连接user表拿头像
             "WHERE t_comment.is_deleted = 0 " +
             "AND (#{content} IS NULL OR #{content} = '' OR t_comment.content LIKE CONCAT('%', #{content}, '%')) " +
             "AND (#{articleId} IS NULL OR t_comment.article_id = #{articleId}) " +
@@ -70,7 +81,7 @@ public interface CommentMapper extends BaseMapper<Comment> {
                                     @Param("author") String author,
                                     @Param("status") Integer status);
 
-    // 搜索总数的SQL（同上述条件）
+    // 搜索总数的SQL（同上述条件，保持原有逻辑不变）
     @Select("SELECT COUNT(*) " +
             "FROM t_comment, t_article " +
             "WHERE t_comment.article_id = t_article.id " +
