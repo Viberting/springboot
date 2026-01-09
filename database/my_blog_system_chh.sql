@@ -104,7 +104,7 @@ CREATE TABLE `t_follow` (
   KEY `fk_follow_followed` (`followed_id`),
   CONSTRAINT `fk_follow_followed` FOREIGN KEY (`followed_id`) REFERENCES `t_user` (`id`),
   CONSTRAINT `fk_follow_follower` FOREIGN KEY (`follower_id`) REFERENCES `t_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='用户关注关系表';
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='用户关注关系表';
 
 /*Data for the table `t_follow` */
 
@@ -113,7 +113,8 @@ insert  into `t_follow`(`id`,`follower_id`,`followed_id`,`created`,`is_deleted`)
 (10,2,4,'2026-01-07',0),
 (11,2,3,'2026-01-07',0),
 (19,4,2,'2026-01-08',0),
-(20,4,1,'2026-01-08',0);
+(20,4,1,'2026-01-08',0),
+(21,3,4,'2026-01-09',0);
 
 /*Table structure for table `t_statistic` */
 
@@ -128,18 +129,18 @@ CREATE TABLE `t_statistic` (
 /*Data for the table `t_statistic` */
 
 insert  into `t_statistic`(`id`,`article_id`,`hits`,`comments_num`) values 
-(1,1,113,5),
-(2,2,7,0),
+(1,1,115,5),
+(2,2,8,0),
 (3,3,5,0),
 (4,4,7,0),
 (5,5,6,0),
 (6,6,15,0),
 (7,7,7,0),
-(8,8,24,1),
-(9,9,25,0),
-(10,10,27,1),
-(11,11,36,1),
-(12,12,143,1),
+(8,8,25,1),
+(9,9,26,0),
+(10,10,29,1),
+(11,11,38,1),
+(12,12,144,1),
 (16,23,36,0),
 (17,22,6,0),
 (18,24,4,0),
@@ -170,10 +171,10 @@ CREATE TABLE `t_user` (
 /*Data for the table `t_user` */
 
 insert  into `t_user`(`id`,`username`,`password`,`email`,`created`,`valid`,`avatar`,`intro`,`github_url`,`bg_image`,`gender`,`birthday`,`follow_count`,`fans_count`) values 
-(1,'admin','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','2127269781@qq.com','2018-10-01',1,'/api/images/f07ace03-30a5-41d7-8e9d-0d1d7ae705bf_admin_avatar.png','普普通通的社畜一枚','','/api/images/c0b7a6a0-443a-41d8-a9df-ffee2ed99634_bg_image3.png',2,NULL,0,2),
+(1,'admin','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','2127269781@qq.com','2018-10-01',1,'/api/images/f07ace03-30a5-41d7-8e9d-0d1d7ae705bf_admin_avatar.png','CrazyStone个人博客小站【官方】','','/api/images/c0b7a6a0-443a-41d8-a9df-ffee2ed99634_bg_image3.png',2,'1990-05-22',0,2),
 (2,'李四','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','1768653040@qq.com','2018-11-13',1,'/api/images/99d3f33b-5a52-4730-8b23-e9fb3432a9e9_avatar_2.png','','','/api/images/8f6aed99-fe22-4752-ac45-08c797a40c33_bg_image2.png',0,'2006-01-11',3,1),
-(3,'东方不败','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','13718391550@163.com','2018-12-18',1,'','','','',2,NULL,0,1),
-(4,'tom','$2a$10$PTMSJbOKqbsEs4hB2sRGUe1D6g3c9Y/mOMOaTCZm3ARYCslTnTpf2','asexeees@sohu.com','2018-12-03',1,'/api/images/79b1c40c-2109-43b8-98cd-1e84e408d05e_avatar_1.png','先悦己，再悦人！','https://github.com/Viberting/springboot.git','/api/images/808d80e0-589f-4b61-a091-fc676a57d4cb_bg_image1.png',1,'2004-12-10',2,1);
+(3,'东方不败','$2a$10$5ooQI8dir8jv0/gCa1Six.GpzAdIPf6pMqdminZ/3ijYzivCyPlfK','13718391550@163.com','2018-12-18',1,'/api/images/3d36b5b7-5eba-484c-b001-b75b7554abce_avatar_3.png','','','/api/images/01e11198-9765-4321-b0e1-75fd0e50f85f_bg_image4.png',2,'2007-02-28',1,1),
+(4,'tom','$2a$10$PTMSJbOKqbsEs4hB2sRGUe1D6g3c9Y/mOMOaTCZm3ARYCslTnTpf2','asexeees@sohu.com','2018-12-03',1,'/api/images/a0b42fdb-1c80-40bc-b7d4-6fe50b5dbb81_avatar_1.png','先悦己，再悦人！','https://github.com/Viberting/springboot.git','/api/images/808d80e0-589f-4b61-a091-fc676a57d4cb_bg_image1.png',1,'2004-12-10',2,2);
 
 /*Table structure for table `t_user_authority` */
 

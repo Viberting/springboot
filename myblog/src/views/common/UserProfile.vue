@@ -397,7 +397,7 @@ const beforeUpload = (file) => {
   const isImage = file.type.includes('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
   if (!isImage) ElMessage.error('只能上传图片格式！')
-  if (!isLt2M) ElMessage.error('图片大小不能超过 2MB！')
+  if (!isLt2M) ElMessage.error('图片大小不能超过 10MB！')
   return isImage && isLt2M
 }
 const confirmUpload = async () => {

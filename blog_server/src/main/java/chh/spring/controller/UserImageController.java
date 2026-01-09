@@ -12,10 +12,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/user")
 public class UserImageController {
-    
+
     @Autowired
     private UserService userService;
-    
+
     @PostMapping("/uploadImage")
     public Result uploadImage(MultipartFile file) {
         Result result = new Result();
