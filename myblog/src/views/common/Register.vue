@@ -51,7 +51,7 @@
           <el-form-item label="邮箱" prop="email">
             <el-input
                 v-model="registerForm.email"
-                placeholder="可选，用于找回密码"
+                placeholder="可选"
                 clearable
             />
           </el-form-item>

@@ -56,7 +56,12 @@ const submitForm = async(formEl) => {
                 toAdminMain()//管理员跳转到管理页面
               }
             }else{
-              ElMessageBox.alert(response.data.msg, '结果')
+              // 检查是否是用户名不存在的错误
+              if (response.data.msg && (response.data.msg.includes('用户名') || response.data.msg.includes('不存在') || response.data.msg.includes('user') || response.data.msg.toLowerCase().includes('not found'))) {
+                ElMessageBox.alert('该用户不存在，请注册', '提示')
+              } else {
+                ElMessageBox.alert(response.data.msg, '结果')
+              }
             }
           }).catch((error) => { //请求失败返回的数据
         ElMessageBox.alert('系统错误！', '结果')

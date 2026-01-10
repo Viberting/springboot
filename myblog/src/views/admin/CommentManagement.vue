@@ -52,8 +52,7 @@ let myData = reactive({
 let searchForm = reactive({
   content: '',
   articleId: '',
-  author: '',
-  status: ''
+  author: ''
 })
 
 // 计算属性：是否显示回复对象列（管理页）
@@ -351,8 +350,7 @@ const searchComments = () => {
     ...myData.pageParams,
     content: searchForm.content.trim() || null,
     articleId: searchForm.articleId ? parseInt(searchForm.articleId) : null,
-    author: searchForm.author.trim() || null,
-    status: searchForm.status !== '' ? parseInt(searchForm.status) : null
+    author: searchForm.author.trim() || null
   }
 
   // 发送搜索请求
@@ -387,7 +385,6 @@ const resetSearch = () => {
   searchForm.content = ''
   searchForm.articleId = ''
   searchForm.author = ''
-  searchForm.status = ''
   // 重新加载所有评论
   myData.pageParams.page = 1;
   getCommentPage()
@@ -420,8 +417,7 @@ const handleCurrentChange = (newPage) => {
 const isSearching = () => {
   return searchForm.content !== '' ||
       searchForm.articleId !== '' ||
-      searchForm.author !== '' ||
-      searchForm.status !== ''
+      searchForm.author !== ''
 }
 
 // 编辑评论（管理端）：保存评论ID和分页状态，跳转至编辑页
@@ -582,12 +578,7 @@ onMounted(() => {
           <el-form-item label="评论作者">
             <el-input v-model="searchForm.author" placeholder="请输入评论作者" clearable />
           </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-              <el-option label="待审核" :value="0" />
-              <el-option label="已审核" :value="1" />
-            </el-select>
-          </el-form-item>
+
           <el-form-item>
             <el-button type="primary" @click="searchComments">搜索</el-button>
             <el-button @click="resetSearch">重置</el-button>
@@ -627,11 +618,7 @@ onMounted(() => {
             </template>
           </el-table-column>
           <el-table-column prop="ip" label="IP地址" width="150" />
-          <el-table-column prop="status" label="状态" width="100">
-            <template #default="scope">
-              <el-tag type="success">已审核</el-tag>
-            </template>
-          </el-table-column>
+
           <el-table-column prop="created" label="评论时间" width="170" />
           <el-table-column label="操作" width="150">
             <template #default="scope">
