@@ -55,23 +55,81 @@ axios.interceptors.response.use(
     // 检查响应是否是HTML内容（可能是重定向到登录页）
     const contentType = response.headers['content-type'];
     if (contentType && contentType.includes('text/html')) {
-      // 如果是HTML内容，可能是被重定向到登录页
-      console.warn('Received HTML response instead of JSON. Possible redirect to login page.');
-      // 可以在这里添加全局提醒或者重定向到登录页
-      // 例如：window.location.href = '/login';
+      // 检查请求URL是否包含需要认证的操作
+      const url = response.config.url;
+      if (needsAuthentication(url)) {
+        // 如果是需要认证的API返回HTML，提示用户登录
+        console.log('需要认证的API请求：' + url);
+        alert('登录已过期，请重新登录');
+        // 重定向到登录页
+        window.location.href = '/#/login';
+      }
+      // 如果是不需要认证的API返回HTML，完全静默处理（不显示任何警告）
     }
     return response;
   },
   error => {
     // 处理401 Unauthorized错误
     if (error.response && error.response.status === 401) {
-      console.warn('Unauthorized access - redirecting to login');
-      // 可以在这里添加全局提醒或者重定向到登录页
-      // 例如：window.location.href = '/login';
+      // 检查请求URL是否包含需要认证的操作
+      const url = error.config.url;
+      if (needsAuthentication(url)) {
+        // 如果是需要认证的API返回401，提示用户登录
+        console.log('401错误，需要认证的API请求：' + url);
+        alert('登录已过期，请重新登录');
+        // 重定向到登录页
+        window.location.href = '/#/login';
+      }
+      // 如果是不需要认证的API返回401，完全静默处理（不显示任何警告）
     }
     return Promise.reject(error);
   }
 );
+
+// 辅助函数：判断URL是否需要认证
+function needsAuthentication(url) {
+  // 需要认证的操作包括：发布评论、编辑、删除、用户管理等
+  // 不需要认证的操作：获取文章、获取评论列表（只读）
+  const authRequiredPaths = [
+    '/api/comment/insert',
+    '/api/comment/saveComment',
+    '/api/comment/delete',
+    '/api/comment/update',
+    '/api/comment/deleteComment',
+    '/api/comment/insertReply',
+    '/api/follow/',
+    '/api/user/',
+    '/api/article/publish',
+    '/api/article/update',
+    '/api/article/delete',
+    '/api/logout'
+  ];
+  
+  // 不需要认证的路径（明确允许未登录访问）
+  const noAuthPaths = [
+    '/api/article/getArticleAndFirstPageCommentByArticleId',
+    '/api/comment/getAPageCommentByArticleId',
+    '/api/comment/getCommentTreeByArticleId',
+    '/api/comment/getCommentReplies'
+  ];
+  
+  // 优先检查不需要认证的路径
+  for (const path of noAuthPaths) {
+    if (url.includes(path)) {
+      return false; // 不需要认证
+    }
+  }
+  
+  // 再检查需要认证的路径
+  for (const path of authRequiredPaths) {
+    if (url.includes(path)) {
+      return true; // 需要认证
+    }
+  }
+  
+  // 默认行为：如果路径包含/api/，且未在白名单中，则需要认证
+  return url.includes('/api/') && !url.includes('/api/images/');
+}
 
 app.use(VueAxios, axios)
 //provide 'axios'，其它地方可以注入，从而可以使用axios
